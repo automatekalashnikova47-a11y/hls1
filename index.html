@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STREAM 47 - Live Stream</title>
+  <title>STREAM 47 - Live Stream Player</title>
   
   <!-- Fonts & External CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +19,7 @@
     :root {
       --bg-dark: #080a09;
       --brand-blue: #4169E1;
-      --brand-blue-glow: rgba(65, 105, 225, 0.6);
+      --brand-blue-glow: rgba(65, 105, 225, 0.45);
       --brand-white: #ffffff;
       --text-muted: #8a99ad;
       --font-brand: 'Bebas Neue', sans-serif;
@@ -55,7 +55,7 @@
       background: radial-gradient(circle at center, #0e1319 0%, var(--bg-dark) 100%);
       transition: opacity 0.5s ease, visibility 0.5s ease;
       text-align: center;
-      padding: 20px;
+      padding: 3vh 3vw;
     }
     .screen.hidden {
       opacity: 0;
@@ -63,7 +63,7 @@
       pointer-events: none;
     }
 
-    /* ── LOADER SCREEN ── */
+    /* ── LOADER SCREEN (Compact 16:9 Scaled) ── */
     #loader-screen { 
       z-index: 50; 
     }
@@ -73,49 +73,51 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      max-width: 90%;
+      max-height: 90vh;
     }
 
-    /* Brand Glow Animation */
+    /* Scaled Brand Glow Animation for Small Iframe Heights */
     .brand-title {
       font-family: var(--font-brand);
-      font-size: 68px;
-      letter-spacing: 3px;
+      font-size: clamp(32px, 8vh, 52px);
+      letter-spacing: 2px;
       line-height: 1;
       color: #ffffff;
-      text-shadow: 0 0 25px rgba(255, 255, 255, 0.4), 0 0 45px var(--brand-blue-glow);
+      text-shadow: 0 0 12px rgba(255, 255, 255, 0.3), 0 0 22px var(--brand-blue-glow);
       animation: brandGlow 2.5s ease-in-out infinite alternate;
-      margin-bottom: 18px;
+      margin-bottom: clamp(8px, 2.2vh, 16px);
     }
     .brand-title span { 
       color: var(--brand-blue); 
-      text-shadow: 0 0 25px var(--brand-blue-glow), 0 0 40px rgba(65, 105, 225, 0.8);
+      text-shadow: 0 0 15px var(--brand-blue-glow), 0 0 25px rgba(65, 105, 225, 0.6);
     }
 
     @keyframes brandGlow {
       0% {
-        text-shadow: 0 0 15px rgba(255, 255, 255, 0.3), 0 0 30px var(--brand-blue-glow);
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.25), 0 0 15px var(--brand-blue-glow);
         transform: scale(1);
       }
       100% {
-        text-shadow: 0 0 30px rgba(255, 255, 255, 0.6), 0 0 60px rgba(65, 105, 225, 0.9);
+        text-shadow: 0 0 16px rgba(255, 255, 255, 0.5), 0 0 30px rgba(65, 105, 225, 0.75);
         transform: scale(1.02);
       }
     }
 
-    /* Three Dots Loader (Matching Image) */
+    /* Compact Three Dots Loader */
     .loader-dots {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      margin-bottom: 28px;
+      gap: clamp(6px, 1.5vw, 10px);
+      margin-bottom: clamp(12px, 2.5vh, 22px);
     }
     .loader-dots span {
-      width: 10px;
-      height: 10px;
+      width: clamp(6px, 1.2vh, 8px);
+      height: clamp(6px, 1.2vh, 8px);
       border-radius: 50%;
       background-color: var(--brand-blue);
-      box-shadow: 0 0 12px var(--brand-blue-glow);
+      box-shadow: 0 0 8px var(--brand-blue-glow);
       animation: dotPulse 1.4s infinite ease-in-out both;
     }
     .loader-dots span:nth-child(1) { animation-delay: -0.32s; }
@@ -128,70 +130,69 @@
         opacity: 0.3;
       }
       40% { 
-        transform: scale(1.2); 
+        transform: scale(1.15); 
         opacity: 1;
-        box-shadow: 0 0 18px var(--brand-blue);
+        box-shadow: 0 0 12px var(--brand-blue);
       }
     }
 
     .subtitle {
-      font-size: 13px;
+      font-size: clamp(10px, 1.8vh, 12px);
       font-weight: 700;
-      letter-spacing: 6px;
+      letter-spacing: clamp(3px, 0.8vw, 5px);
       color: #e0e6ed;
       text-transform: uppercase;
-      margin-bottom: 36px;
-      opacity: 0.9;
+      margin-bottom: clamp(14px, 3vh, 26px);
+      opacity: 0.85;
     }
 
     .status-text {
-      font-size: 11px;
+      font-size: clamp(9px, 1.5vh, 10px);
       font-weight: 700;
-      letter-spacing: 5px;
+      letter-spacing: clamp(2px, 0.6vw, 4px);
       color: var(--text-muted);
       text-transform: uppercase;
     }
 
-    /* ── ERROR SCREEN ── */
+    /* ── ERROR SCREEN (Compact) ── */
     #error-screen { z-index: 40; }
     .error-icon {
-      width: 50px;
-      height: 50px;
-      margin-bottom: 16px;
+      width: clamp(32px, 6vh, 44px);
+      height: clamp(32px, 6vh, 44px);
+      margin-bottom: 12px;
       color: #ff4d4d;
     }
     .error-title {
       font-family: var(--font-brand);
-      font-size: 32px;
+      font-size: clamp(22px, 4vh, 28px);
       letter-spacing: 2px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       color: #ff4d4d;
     }
     .error-desc {
-      font-size: 13px;
+      font-size: clamp(11px, 1.8vh, 12px);
       color: var(--text-muted);
-      max-width: 320px;
-      line-height: 1.5;
-      margin-bottom: 20px;
+      max-width: 280px;
+      line-height: 1.4;
+      margin-bottom: 16px;
     }
     .retry-btn {
       background: rgba(65, 105, 225, 0.2);
       border: 1px solid var(--brand-blue);
       color: #fff;
-      padding: 8px 24px;
+      padding: 6px 18px;
       border-radius: 4px;
       font-weight: 700;
-      font-size: 12px;
+      font-size: clamp(10px, 1.5vh, 11px);
       letter-spacing: 2px;
       cursor: pointer;
       transition: all 0.3s;
     }
     .retry-btn:hover {
       background: var(--brand-blue);
-      box-shadow: 0 0 15px var(--brand-blue-glow);
+      box-shadow: 0 0 12px var(--brand-blue-glow);
     }
 
-    /* ── PLAYER & WATERMARKS ── */
     #player-wrap {
       width: 100%;
       height: 100%;
@@ -204,19 +205,19 @@
     .plyr--video, .plyr__video-wrapper { height: 100% !important; }
     .plyr video { height: 100% !important; object-fit: contain; }
     
-    /* Watermark Top Left (Join) */
+    /* Watermark Top Left (Join Button) */
     #join-btn {
       position: absolute;
-      top: 12px;
-      left: 12px;
+      top: 8px;
+      left: 8px;
       z-index: 102;
       color: rgba(255,255,255,0.7);
       border: 1px solid rgba(255,255,255,0.3);
-      padding: 3px 10px;
-      border-radius: 4px;
+      padding: 2px 8px;
+      border-radius: 3px;
       text-decoration: none;
       font-weight: 700;
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: 1px;
       background: rgba(0,0,0,0.4);
       backdrop-filter: blur(4px);
@@ -230,15 +231,15 @@
     /* Custom Overlay Fullscreen Button */
     #custom-fs-btn {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 8px;
+      right: 8px;
       z-index: 103;
       background: rgba(0, 0, 0, 0.65);
       border: 1px solid rgba(65, 105, 225, 0.3);
       color: #fff;
-      width: 30px;
-      height: 30px;
-      border-radius: 4px;
+      width: 26px;
+      height: 26px;
+      border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -252,12 +253,12 @@
     #custom-fs-btn:hover {
       background: rgba(65, 105, 225, 0.2);
       border-color: var(--brand-blue);
-      box-shadow: 0 0 8px var(--brand-blue-glow);
+      box-shadow: 0 0 6px var(--brand-blue-glow);
       transform: scale(1.05);
     }
     #custom-fs-btn svg {
-      width: 15px;
-      height: 15px;
+      width: 13px;
+      height: 13px;
       fill: currentColor;
     }
 
@@ -268,36 +269,36 @@
       pointer-events: none;
     }
 
-    /* Watermark Bottom Center */
+    /* Watermark Bottom Center (Compact horizontally) */
     #wm {
       position: absolute;
-      bottom: 54px;
+      bottom: 46px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 102;
       pointer-events: none;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.4s, visibility 0.4s;
       width: max-content;
-      max-width: 90%;
+      max-width: 85%;
     }
     #wm.visible {
       visibility: visible;
       opacity: 0.4;
     }
     .plyr--hide-controls #wm.visible { opacity: 0.2; }
-    .wm-rule { width: 30px; height: 1px; background: linear-gradient(90deg, transparent, var(--brand-blue)); flex-shrink: 0; }
+    .wm-rule { width: 20px; height: 1px; background: linear-gradient(90deg, transparent, var(--brand-blue)); flex-shrink: 0; }
     .wm-rule.r { background: linear-gradient(90deg, var(--brand-blue), transparent); flex-shrink: 0; }
-    .wm-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; white-space: nowrap; }
-    .wm-name { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 4px; color: #fff; text-shadow: 0 2px 10px #000; }
+    .wm-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; text-align: center; white-space: nowrap; }
+    .wm-name { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 3px; color: #fff; text-shadow: 0 2px 8px #000; }
     .wm-name span { color: var(--brand-blue); }
-    .wm-url { font-size: 10px; font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,0.6); text-transform: uppercase; white-space: nowrap; }
+    .wm-url { font-size: 8.5px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.6); text-transform: uppercase; white-space: nowrap; }
 
-    /* In-Player Buffering Spinner */
+    /* In-Player Buffering Indicator */
     #buffering-indicator {
       position: absolute;
       top: 50%;
@@ -305,7 +306,7 @@
       transform: translate(-50%, -50%);
       z-index: 101;
       display: flex;
-      gap: 6px;
+      gap: 5px;
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.3s;
@@ -317,8 +318,8 @@
     }
 
     .dot {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       background-color: var(--brand-blue);
       border-radius: 50%;
       animation: dotPulse 1.2s infinite ease-in-out both;
@@ -332,7 +333,7 @@
 </head>
 <body>
 
-  <!-- LOADER SCREEN (Matches Reference Image Layout) -->
+  <!-- LOADER SCREEN (Compact 16:9 Frame Layout) -->
   <div id="loader-screen" class="screen">
     <div class="loader-content">
       <h1 class="brand-title">STREAM<span>47</span></h1>
