@@ -7,9 +7,9 @@
     <meta name="author" content="SportsTrack" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    
+
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    
+
     <!-- Dependencies -->
     <link rel="preconnect" href="https://cdn.plyr.io" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
@@ -18,7 +18,16 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    
+
+    <!-- Adcash Library -->
+    <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
+    <!-- Adcash Tag Script -->
+    <script type="text/javascript">
+      aclib.runVideoSlider({
+        zoneId: '12344258',
+      });
+    </script>
+
     <!-- Keyboard/Right-click Protection -->
     <script>
       document.addEventListener("contextmenu", e => e.preventDefault(), false);
@@ -27,14 +36,6 @@
         if (e.ctrlKey && e.keyCode === 85) e.preventDefault();
         if (e.keyCode === 123) e.preventDefault();
       }, false);
-    </script>
-
-    <!-- Adcash Library & Video Slider Tag -->
-    <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
-    <script type="text/javascript">
-      aclib.runVideoSlider({
-        zoneId: '12344234',
-      });
     </script>
 
     <style>
@@ -93,7 +94,7 @@
 
       /* ── LOADER SCREEN ── */
       #loader-screen { z-index: 50; }
-      
+
       .brand-title {
         font-family: 'Bebas Neue', sans-serif;
         font-size: clamp(32px, 6vw, 48px);
@@ -153,7 +154,7 @@
         z-index: 60;
         background: var(--bg-dark);
       }
-      
+
       .lightning-icon {
         width: clamp(32px, 5vw, 42px);
         height: clamp(32px, 5vw, 42px);
@@ -211,7 +212,7 @@
       .plyr { width: 100% !important; height: 100% !important; position: relative; font-weight: 600; }
       .plyr--video, .plyr__video-wrapper { height: 100% !important; }
       .plyr video { height: 100% !important; object-fit: contain; }
-      
+
       /* Watermark Top Left (Join) */
       #join-btn {
         position: absolute;
@@ -332,7 +333,7 @@
     <!-- PLAYER WRAPPER -->
     <div id="player-wrap">
       <a id="join-btn" href="https://www.whatsapp.com/channel/0029Vb7Jqva5K3zLauUJSv2s" target="_blank">JOIN US</a>
-      
+
       <!-- CUSTOM FULLSCREEN BUTTON -->
       <button id="custom-fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
         <svg class="fs-icon-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -342,7 +343,7 @@
           <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"/>
         </svg>
       </button>
-      
+
       <video id="player" controls playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true"></video>
     </div>
 
@@ -493,7 +494,7 @@
           if (!Hls.isSupported() && video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = srcUrl;
             plyr = new Plyr(video, { controls: ['play-large','play','progress','current-time','mute','volume'] });
-            
+
             video.play().catch(()=>{});
             video.addEventListener('error', () => triggerError('Native playback failed. The stream might be offline or unsupported.'));
             return;
