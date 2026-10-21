@@ -56,12 +56,12 @@
         background-image: 
           linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
           linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 40px 40px;
+        background-size: 30px 30px;
         z-index: 0;
         pointer-events: none;
         transform: perspective(500px) rotateX(45deg) scale(2);
         transform-origin: top center;
-        opacity: 0.4;
+        opacity: 0.35;
       }
 
       /* ── SCREENS ── */
@@ -75,6 +75,7 @@
         z-index: 10;
         background: radial-gradient(circle at center, #0c1017 0%, var(--bg-dark) 100%);
         transition: opacity 0.5s ease, visibility 0.5s ease;
+        padding: 10px;
       }
       .screen.hidden {
         opacity: 0;
@@ -87,31 +88,30 @@
       
       .brand-title {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: 64px;
-        letter-spacing: 6px;
+        font-size: clamp(32px, 6vw, 48px);
+        letter-spacing: clamp(3px, 0.8vw, 5px);
         line-height: 1;
         color: #ffffff;
-        text-shadow: 0 0 25px rgba(255, 255, 255, 0.35), 0 0 45px rgba(77, 124, 255, 0.25);
-        margin-bottom: 22px;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.35), 0 0 35px rgba(77, 124, 255, 0.25);
+        margin-bottom: clamp(10px, 2vh, 16px);
       }
       .brand-title span { 
         color: #3b82f6; 
-        text-shadow: 0 0 25px rgba(59, 130, 246, 0.6), 0 0 50px rgba(59, 130, 246, 0.3);
+        text-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3);
       }
 
-      /* Dots loader matching reference image styling */
       .dots-container {
         display: flex;
-        gap: 12px;
-        margin-bottom: 38px;
+        gap: clamp(6px, 1.2vw, 10px);
+        margin-bottom: clamp(16px, 3vh, 28px);
       }
       .dot {
-        width: 10px;
-        height: 10px;
+        width: clamp(6px, 1vw, 8px);
+        height: clamp(6px, 1vw, 8px);
         background-color: #3b82f6;
         border-radius: 50%;
         opacity: 0.3;
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
         animation: pulseDot 1.4s infinite ease-in-out both;
       }
       .dot:nth-child(1) { animation-delay: -0.32s; }
@@ -122,22 +122,22 @@
       }
 
       .subtitle {
-        font-size: 15px;
+        font-size: clamp(10px, 1.8vw, 13px);
         font-weight: 600;
-        letter-spacing: 11px;
+        letter-spacing: clamp(4px, 1.2vw, 8px);
         color: #8b9bb4;
         text-transform: uppercase;
-        margin-bottom: 48px;
-        padding-left: 11px; /* Center-balance letter spacing */
+        margin-bottom: clamp(16px, 3vh, 28px);
+        padding-left: clamp(4px, 1.2vw, 8px);
       }
 
       .status-text {
-        font-size: 13px;
+        font-size: clamp(9px, 1.5vw, 11px);
         font-weight: 600;
-        letter-spacing: 7px;
+        letter-spacing: clamp(3px, 1vw, 5px);
         color: #6b7c96;
         text-transform: uppercase;
-        padding-left: 7px; /* Center-balance letter spacing */
+        padding-left: clamp(3px, 1vw, 5px);
       }
 
       /* ── ERROR SCREEN ── */
@@ -147,40 +147,40 @@
       }
       
       .lightning-icon {
-        width: 48px;
-        height: 48px;
+        width: clamp(32px, 5vw, 42px);
+        height: clamp(32px, 5vw, 42px);
         fill: #dca952;
-        margin-bottom: 24px;
-        filter: drop-shadow(0 0 15px rgba(220, 169, 82, 0.3));
+        margin-bottom: 16px;
+        filter: drop-shadow(0 0 12px rgba(220, 169, 82, 0.3));
       }
 
       .error-title {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: 38px;
-        letter-spacing: 3px;
-        margin-bottom: 16px;
+        font-size: clamp(24px, 4vw, 32px);
+        letter-spacing: 2px;
+        margin-bottom: 12px;
       }
 
       .error-desc {
         font-family: 'Courier New', Courier, monospace;
-        font-size: 13px;
+        font-size: clamp(10px, 1.5vw, 12px);
         color: var(--text-dim);
         text-align: center;
-        max-width: 320px;
-        line-height: 1.6;
-        margin-bottom: 32px;
+        max-width: 280px;
+        line-height: 1.5;
+        margin-bottom: 20px;
       }
 
       .retry-btn {
         background-color: var(--brand-blue);
         color: #fff;
         border: none;
-        padding: 12px 32px;
+        padding: 8px 24px;
         border-radius: 4px;
         font-family: 'Rajdhani', sans-serif;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 700;
-        letter-spacing: 2px;
+        letter-spacing: 1.5px;
         cursor: pointer;
         transition: all 0.2s ease;
         box-shadow: 0 4px 15px rgba(65, 105, 225, 0.2);
@@ -207,16 +207,16 @@
       /* Watermark Top Left (Join) */
       #join-btn {
         position: absolute;
-        top: 12px;
-        left: 12px;
+        top: 8px;
+        left: 8px;
         z-index: 102;
         color: rgba(255,255,255,0.7);
         border: 1px solid rgba(255,255,255,0.3);
-        padding: 3px 10px;
+        padding: 2px 8px;
         border-radius: 4px;
         text-decoration: none;
         font-weight: 700;
-        font-size: 11px;
+        font-size: 10px;
         letter-spacing: 1px;
         background: rgba(0,0,0,0.4);
         backdrop-filter: blur(4px);
@@ -227,14 +227,14 @@
       /* Custom Overlay Fullscreen Button */
       #custom-fs-btn {
         position: absolute;
-        top: 12px;
-        right: 12px;
+        top: 8px;
+        right: 8px;
         z-index: 103;
         background: rgba(0, 0, 0, 0.65);
         border: 1px solid rgba(65, 105, 225, 0.3);
         color: #fff;
-        width: 30px;
-        height: 30px;
+        width: 26px;
+        height: 26px;
         border-radius: 4px;
         display: flex;
         align-items: center;
@@ -250,8 +250,8 @@
         transform: scale(1.05);
       }
       #custom-fs-btn svg {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         stroke: #fff;
         transition: transform 0.2s;
       }
@@ -263,27 +263,32 @@
         pointer-events: none;
       }
 
-      /* Watermark Bottom Center */
+      /* Watermark Bottom Center - Default hidden until stream loads */
       #wm {
         position: absolute;
-        bottom: 54px;
+        bottom: 48px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 102;
         pointer-events: none;
         display: flex;
         align-items: center;
-        gap: 12px;
-        opacity: 0.4;
-        transition: opacity 0.4s;
+        gap: 8px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
       }
-      .plyr--hide-controls #wm { opacity: 0.2; }
-      .wm-rule { width: 30px; height: 1px; background: linear-gradient(90deg, transparent, var(--brand-blue)); }
+      #wm.visible {
+        opacity: 0.4;
+        visibility: visible;
+      }
+      .plyr--hide-controls #wm.visible { opacity: 0.2; }
+      .wm-rule { width: 22px; height: 1px; background: linear-gradient(90deg, transparent, var(--brand-blue)); }
       .wm-rule.r { background: linear-gradient(90deg, var(--brand-blue), transparent); }
-      .wm-inner { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-      .wm-name { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 4px; color: #fff; text-shadow: 0 2px 10px #000; }
+      .wm-inner { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+      .wm-name { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 3px; color: #fff; text-shadow: 0 2px 8px #000; }
       .wm-name span { color: var(--brand-blue); }
-      .wm-url { font-size: 10px; font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,0.6); text-transform: uppercase; }
+      .wm-url { font-size: 8px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.6); text-transform: uppercase; }
 
       /* Hidden helper utility class */
       .hidden { display: none !important; }
@@ -420,6 +425,7 @@
         function showLoader(msg) {
           errorScreen.classList.add('hidden');
           loaderScreen.classList.remove('hidden');
+          wm.classList.remove('visible'); // Keep watermark hidden while loading
           if(msg) statusText.textContent = msg;
         }
 
@@ -427,6 +433,7 @@
           clearTimeout(hardTimeout);
           loaderScreen.classList.add('hidden');
           errorScreen.classList.remove('hidden');
+          wm.classList.remove('visible'); // Hide watermark on error
           if (msg) document.getElementById('error-desc').textContent = msg;
           if (hls) { hls.destroy(); hls = null; }
           if (plyr) { plyr.destroy(); plyr = null; }
@@ -442,6 +449,7 @@
           loaderScreen.classList.add('hidden');
           errorScreen.classList.add('hidden');
           mountWm();
+          wm.classList.add('visible'); // Show watermark ONLY after stream has loaded
         }
 
         if (!DIRECT_SRC) {
@@ -551,12 +559,13 @@
         }
 
         function resetWm() {
+          if (!wm.classList.contains('visible')) return;
           wm.style.opacity = '0.5';
           clearTimeout(wmTimer);
           wmTimer = setTimeout(() => { if (!video.paused) wm.style.opacity = '0.2'; }, 3000);
         }
         video.addEventListener('play', resetWm);
-        video.addEventListener('pause', () => wm.style.opacity = '0.5');
+        video.addEventListener('pause', () => { if (wm.classList.contains('visible')) wm.style.opacity = '0.5'; });
         document.addEventListener('mousemove', resetWm);
         document.addEventListener('touchstart', resetWm);
 
