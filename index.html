@@ -33,11 +33,11 @@
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
       :root {
-        --brand-blue: #4d7cff;
-        --brand-blue-glow: rgba(77, 124, 255, 0.6);
-        --bg-dark: #07090e;
+        --brand-blue: #4169E1;
+        --brand-blue-glow: rgba(65, 105, 225, 0.4);
+        --bg-dark: #080b09;
         --text-dim: #9ca3af;
-        --plyr-color-main: #4d7cff;
+        --plyr-color-main: #4169E1;
       }
 
       html, body {
@@ -54,14 +54,14 @@
         position: absolute;
         inset: 0;
         background-image: 
-          linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 30px 30px;
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
         z-index: 0;
         pointer-events: none;
         transform: perspective(500px) rotateX(45deg) scale(2);
         transform-origin: top center;
-        opacity: 0.35;
+        opacity: 0.6;
       }
 
       /* ── SCREENS ── */
@@ -73,9 +73,8 @@
         align-items: center;
         justify-content: center;
         z-index: 10;
-        background: radial-gradient(circle at center, #0c1017 0%, var(--bg-dark) 100%);
+        background: radial-gradient(circle at center, #0f1712 0%, var(--bg-dark) 100%);
         transition: opacity 0.5s ease, visibility 0.5s ease;
-        padding: 10px;
       }
       .screen.hidden {
         opacity: 0;
@@ -86,58 +85,78 @@
       /* ── LOADER SCREEN ── */
       #loader-screen { z-index: 50; }
       
+      .radar-container {
+        position: relative;
+        width: 90px;
+        height: 90px;
+        margin-bottom: 24px;
+        border-radius: 50%;
+        background: radial-gradient(circle at center, rgba(65, 105, 225, 0.1) 0%, transparent 70%);
+        box-shadow: 0 0 40px rgba(65, 105, 225, 0.15);
+      }
+      .radar-svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+      .radar-sweep {
+        transform-origin: 50px 50px;
+        animation: spin 2s linear infinite;
+      }
+      @keyframes spin { 100% { transform: rotate(360deg); } }
+
       .brand-title {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: clamp(32px, 6vw, 48px);
-        letter-spacing: clamp(3px, 0.8vw, 5px);
+        font-size: 56px;
+        letter-spacing: 4px;
         line-height: 1;
-        color: #ffffff;
-        text-shadow: 0 0 20px rgba(255, 255, 255, 0.35), 0 0 35px rgba(77, 124, 255, 0.25);
-        margin-bottom: clamp(10px, 2vh, 16px);
+        text-shadow: 0 0 20px rgba(65, 105, 225, 0.3);
       }
-      .brand-title span { 
-        color: #3b82f6; 
-        text-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3);
+      .brand-title span { color: var(--brand-blue); }
+      
+      .subtitle {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 6px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 8px;
+        text-transform: uppercase;
+      }
+
+      .divider {
+        width: 200px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        margin: 24px 0;
       }
 
       .dots-container {
         display: flex;
-        gap: clamp(6px, 1.2vw, 10px);
-        margin-bottom: clamp(16px, 3vh, 28px);
+        gap: 6px;
+        margin-bottom: 12px;
       }
       .dot {
-        width: clamp(6px, 1vw, 8px);
-        height: clamp(6px, 1vw, 8px);
-        background-color: #3b82f6;
+        width: 6px;
+        height: 6px;
+        background-color: var(--brand-blue);
         border-radius: 50%;
         opacity: 0.3;
-        box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+        box-shadow: 0 0 10px var(--brand-blue-glow);
         animation: pulseDot 1.4s infinite ease-in-out both;
       }
       .dot:nth-child(1) { animation-delay: -0.32s; }
       .dot:nth-child(2) { animation-delay: -0.16s; }
       @keyframes pulseDot {
-        0%, 80%, 100% { transform: scale(0.75); opacity: 0.25; }
-        40% { transform: scale(1.15); opacity: 0.9; }
-      }
-
-      .subtitle {
-        font-size: clamp(10px, 1.8vw, 13px);
-        font-weight: 600;
-        letter-spacing: clamp(4px, 1.2vw, 8px);
-        color: #8b9bb4;
-        text-transform: uppercase;
-        margin-bottom: clamp(16px, 3vh, 28px);
-        padding-left: clamp(4px, 1.2vw, 8px);
+        0%, 80%, 100% { transform: scale(0.8); opacity: 0.3; }
+        40% { transform: scale(1.2); opacity: 1; }
       }
 
       .status-text {
-        font-size: clamp(9px, 1.5vw, 11px);
+        font-size: 13px;
         font-weight: 600;
-        letter-spacing: clamp(3px, 1vw, 5px);
-        color: #6b7c96;
+        letter-spacing: 3px;
+        color: rgba(255, 255, 255, 0.5);
         text-transform: uppercase;
-        padding-left: clamp(3px, 1vw, 5px);
       }
 
       /* ── ERROR SCREEN ── */
@@ -147,40 +166,40 @@
       }
       
       .lightning-icon {
-        width: clamp(32px, 5vw, 42px);
-        height: clamp(32px, 5vw, 42px);
+        width: 48px;
+        height: 48px;
         fill: #dca952;
-        margin-bottom: 16px;
-        filter: drop-shadow(0 0 12px rgba(220, 169, 82, 0.3));
+        margin-bottom: 24px;
+        filter: drop-shadow(0 0 15px rgba(220, 169, 82, 0.3));
       }
 
       .error-title {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: clamp(24px, 4vw, 32px);
-        letter-spacing: 2px;
-        margin-bottom: 12px;
+        font-size: 38px;
+        letter-spacing: 3px;
+        margin-bottom: 16px;
       }
 
       .error-desc {
         font-family: 'Courier New', Courier, monospace;
-        font-size: clamp(10px, 1.5vw, 12px);
+        font-size: 13px;
         color: var(--text-dim);
         text-align: center;
-        max-width: 280px;
-        line-height: 1.5;
-        margin-bottom: 20px;
+        max-width: 320px;
+        line-height: 1.6;
+        margin-bottom: 32px;
       }
 
       .retry-btn {
         background-color: var(--brand-blue);
         color: #fff;
         border: none;
-        padding: 8px 24px;
+        padding: 12px 32px;
         border-radius: 4px;
         font-family: 'Rajdhani', sans-serif;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 700;
-        letter-spacing: 1.5px;
+        letter-spacing: 2px;
         cursor: pointer;
         transition: all 0.2s ease;
         box-shadow: 0 4px 15px rgba(65, 105, 225, 0.2);
@@ -207,42 +226,48 @@
       /* Watermark Top Left (Join) */
       #join-btn {
         position: absolute;
-        top: 8px;
-        left: 8px;
+        top: 12px;
+        left: 12px;
         z-index: 102;
         color: rgba(255,255,255,0.7);
         border: 1px solid rgba(255,255,255,0.3);
-        padding: 2px 8px;
+        padding: 3px 10px;
         border-radius: 4px;
         text-decoration: none;
         font-weight: 700;
-        font-size: 10px;
+        font-size: 11px;
         letter-spacing: 1px;
         background: rgba(0,0,0,0.4);
         backdrop-filter: blur(4px);
-        transition: all 0.2s;
+        transition: all 0.4s ease;
+        opacity: 0;
+        visibility: hidden;
       }
+      #join-btn.visible { opacity: 1; visibility: visible; }
       #join-btn:hover { color: #fff; border-color: #fff; background: rgba(0,0,0,0.7); }
 
-      /* Custom Overlay Fullscreen Button */
+      /* Custom Overlay Fullscreen Button (Tuned and Sized Small) */
       #custom-fs-btn {
         position: absolute;
-        top: 8px;
-        right: 8px;
+        top: 12px;
+        right: 12px;
         z-index: 103;
         background: rgba(0, 0, 0, 0.65);
         border: 1px solid rgba(65, 105, 225, 0.3);
         color: #fff;
-        width: 26px;
-        height: 26px;
+        width: 30px;
+        height: 30px;
         border-radius: 4px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: all 0.2s ease, opacity 0.3s ease;
+        transition: all 0.4s ease, transform 0.2s;
         backdrop-filter: blur(4px);
+        opacity: 0;
+        visibility: hidden;
       }
+      #custom-fs-btn.visible { opacity: 1; visibility: visible; }
       #custom-fs-btn:hover {
         background: rgba(65, 105, 225, 0.2);
         border-color: var(--brand-blue);
@@ -250,45 +275,67 @@
         transform: scale(1.05);
       }
       #custom-fs-btn svg {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         stroke: #fff;
         transition: transform 0.2s;
       }
       #custom-fs-btn:active svg {
         transform: scale(0.9);
       }
+      /* Hide the overlay FS button when Plyr naturally hides its controls */
       .plyr--hide-controls #custom-fs-btn {
-        opacity: 0;
+        opacity: 0 !important;
         pointer-events: none;
       }
 
-      /* Watermark Bottom Center - Default hidden until stream loads */
+      /* Watermark Bottom Center */
       #wm {
         position: absolute;
-        bottom: 48px;
+        bottom: 54px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 102;
         pointer-events: none;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 12px;
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.4s ease, visibility 0.4s ease;
+        transition: opacity 0.4s, visibility 0.4s;
+        width: max-content;
+        max-width: 90%;
       }
       #wm.visible {
-        opacity: 0.4;
         visibility: visible;
+        opacity: 0.4;
       }
       .plyr--hide-controls #wm.visible { opacity: 0.2; }
-      .wm-rule { width: 22px; height: 1px; background: linear-gradient(90deg, transparent, var(--brand-blue)); }
-      .wm-rule.r { background: linear-gradient(90deg, var(--brand-blue), transparent); }
-      .wm-inner { display: flex; flex-direction: column; align-items: center; gap: 1px; }
-      .wm-name { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 3px; color: #fff; text-shadow: 0 2px 8px #000; }
+      .wm-rule { width: 30px; height: 1px; background: linear-gradient(90deg, transparent, var(--brand-blue)); flex-shrink: 0; }
+      .wm-rule.r { background: linear-gradient(90deg, var(--brand-blue), transparent); flex-shrink: 0; }
+      .wm-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; white-space: nowrap; }
+      .wm-name { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 4px; color: #fff; text-shadow: 0 2px 10px #000; }
       .wm-name span { color: var(--brand-blue); }
-      .wm-url { font-size: 8px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.6); text-transform: uppercase; }
+      .wm-url { font-size: 10px; font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,0.6); text-transform: uppercase; white-space: nowrap; }
+
+      /* In-Player Buffering Spinner */
+      #buffering-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 101;
+        display: flex;
+        gap: 6px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      #buffering-indicator.active {
+        opacity: 1;
+        visibility: visible;
+      }
 
       /* Hidden helper utility class */
       .hidden { display: none !important; }
@@ -299,16 +346,27 @@
     <!-- BACKGROUND GRID -->
     <div class="bg-grid"></div>
 
-    <!-- LOADER SCREEN (Redesigned to match image) -->
+    <!-- LOADER SCREEN -->
     <div id="loader-screen" class="screen">
+      <div class="radar-container">
+        <svg viewBox="0 0 100 100" class="radar-svg">
+          <circle cx="50" cy="50" r="48" stroke="rgba(65, 105, 225, 0.15)" stroke-width="1" fill="none" />
+          <circle cx="50" cy="50" r="28" stroke="rgba(65, 105, 225, 0.4)" stroke-width="1" fill="none" />
+          <circle cx="50" cy="50" r="8" stroke="rgba(65, 105, 225, 0.6)" stroke-width="2" fill="none" />
+          <g class="radar-sweep">
+            <circle cx="50" cy="22" r="3.5" fill="#fff" filter="drop-shadow(0 0 4px #4169E1)" />
+          </g>
+        </svg>
+      </div>
       <h1 class="brand-title">SPORTS<span>TRACK</span></h1>
+      <h2 class="subtitle">LIVE MATCH CENTER</h2>
+      <div class="divider"></div>
       <div class="dots-container">
         <div class="dot"></div>
         <div class="dot"></div>
         <div class="dot"></div>
       </div>
-      <h2 class="subtitle">LIVE MATCH CENTER</h2>
-      <p class="status-text" id="status-text">ESTABLISHING CONNECTION...</p>
+      <p class="status-text" id="status-text">CONNECTING TO STREAM...</p>
     </div>
 
     <!-- ERROR SCREEN -->
@@ -323,13 +381,22 @@
 
     <!-- PLAYER WRAPPER -->
     <div id="player-wrap">
-      <a id="join-btn" href="https://www.whatsapp.com/channel/0029Vb7Jqva5K3zLauUJSv2s" target="_blank">JOIN US</a>
+      <a id="join-btn" href="https://whatsapp.com/channel/0029VbBcvbn9WtC1onDirp09" target="_blank">JOIN US</a>
       
-      <!-- CUSTOM FULLSCREEN BUTTON -->
+      <!-- In-Player Buffering Indicator -->
+      <div id="buffering-indicator">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+
+      <!-- CUSTOM FULLSCREEN BUTTON (Overlay top-right corner) -->
       <button id="custom-fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
+        <!-- SVG Expand Icon -->
         <svg class="fs-icon-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
         </svg>
+        <!-- SVG Compress Icon -->
         <svg class="fs-icon-exit hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"/>
         </svg>
@@ -350,6 +417,7 @@
 
     <script>
       (function(){
+        // INITIALIZE VARIABLES AT THE TOP TO PREVENT REFERENCE ERRORS
         let hls = null;
         let plyr = null;
         let hardTimeout = null;
@@ -365,7 +433,9 @@
         const errorScreen = document.getElementById('error-screen');
         const statusText = document.getElementById('status-text');
         const wm = document.getElementById('wm');
+        const joinBtn = document.getElementById('join-btn');
         const customFsBtn = document.getElementById('custom-fs-btn');
+        const bufferingIndicator = document.getElementById('buffering-indicator');
 
         // Robust Fullscreen Switch
         window.toggleFullscreen = function() {
@@ -376,6 +446,7 @@
                        document.msFullscreenElement;
 
           if (!isFS) {
+            // Request Fullscreen on video wrapper
             if (wrapper.requestFullscreen) {
               wrapper.requestFullscreen();
             } else if (wrapper.webkitRequestFullscreen) {
@@ -385,9 +456,11 @@
             } else if (wrapper.msRequestFullscreen) {
               wrapper.msRequestFullscreen();
             } else if (video.webkitEnterFullscreen) {
+              // iOS native video fallback
               video.webkitEnterFullscreen();
             }
           } else {
+            // Exit Fullscreen
             if (document.exitFullscreen) {
               document.exitFullscreen();
             } else if (document.webkitExitFullscreen) {
@@ -400,6 +473,7 @@
           }
         };
 
+        // Keep button icons updated on change
         function updateFullscreenIcons() {
           const enterIcon = customFsBtn.querySelector('.fs-icon-enter');
           const exitIcon = customFsBtn.querySelector('.fs-icon-exit');
@@ -422,18 +496,19 @@
         document.addEventListener('mozfullscreenchange', updateFullscreenIcons);
         document.addEventListener('MSFullscreenChange', updateFullscreenIcons);
 
+        // UI Management
         function showLoader(msg) {
           errorScreen.classList.add('hidden');
           loaderScreen.classList.remove('hidden');
-          wm.classList.remove('visible'); // Keep watermark hidden while loading
           if(msg) statusText.textContent = msg;
         }
 
+        // Error triggers and dismantles components cleanly
         function triggerError(msg) {
           clearTimeout(hardTimeout);
           loaderScreen.classList.add('hidden');
           errorScreen.classList.remove('hidden');
-          wm.classList.remove('visible'); // Hide watermark on error
+          bufferingIndicator.classList.remove('active');
           if (msg) document.getElementById('error-desc').textContent = msg;
           if (hls) { hls.destroy(); hls = null; }
           if (plyr) { plyr.destroy(); plyr = null; }
@@ -444,12 +519,18 @@
           if (p && !p.contains(wm)) { p.style.position = 'relative'; p.appendChild(wm); }
         }
 
+        // Hides Loader Screen and configures Watermark alignment
         function onVideoReadyToPlay() {
           clearTimeout(hardTimeout);
           loaderScreen.classList.add('hidden');
           errorScreen.classList.add('hidden');
+          bufferingIndicator.classList.remove('active');
           mountWm();
-          wm.classList.add('visible'); // Show watermark ONLY after stream has loaded
+          
+          // Reveal overlays ONLY when video is actually playing/ready
+          wm.classList.add('visible');
+          joinBtn.classList.add('visible');
+          customFsBtn.classList.add('visible');
         }
 
         if (!DIRECT_SRC) {
@@ -457,10 +538,12 @@
           return;
         }
 
+        // Hard timeout: If video doesn't load/buffer enough to play within 15s, show fallback screen
         hardTimeout = setTimeout(() => {
           triggerError('Connection timed out. Check if the stream URL is valid, CORS is allowed, and the .m3u8 is reachable.');
         }, 15000);
 
+        // Auto-landscape handling
         function lockLandscape(){
           try {
             const scr = screen.orientation || screen.msOrientation;
@@ -477,13 +560,24 @@
         video.addEventListener('webkitbeginfullscreen', lockLandscape);
         video.addEventListener('webkitendfullscreen', unlockOrientation);
 
+        // Handle Player Buffering State for embedded views
+        video.addEventListener('waiting', () => {
+          if (loaderScreen.classList.contains('hidden')) {
+            bufferingIndicator.classList.add('active');
+          }
+        });
+
+        // Hide Loader as soon as video plays OR is ready to be played (handling autoplay block)
         video.addEventListener('playing', onVideoReadyToPlay);
         video.addEventListener('canplay', onVideoReadyToPlay);
         video.addEventListener('loadedmetadata', onVideoReadyToPlay);
 
+        // Core Player Setup
         function initPlayer(srcUrl) {
+          // Native HLS (iOS Safari)
           if (!Hls.isSupported() && video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = srcUrl;
+            // Native UI: exclude Plyr's default fullscreen so it doesn't collide with our custom button
             plyr = new Plyr(video, { controls: ['play-large','play','progress','current-time','mute','volume'] });
             
             video.play().catch(()=>{});
@@ -496,6 +590,7 @@
             return;
           }
 
+          // HLS.js implementation
           hls = new Hls({
             maxBufferLength: 30,
             maxMaxBufferLength: 60,
@@ -512,6 +607,7 @@
             const qualities = data.levels.map(l => l.height).filter(h => h > 0).sort((a,b)=>b-a);
             const uniqueQualities = [...new Set(qualities)];
 
+            // Exclude Plyr's native fullscreen option since we utilize a custom hardware overlay button
             plyr = new Plyr(video, {
               controls: ['play-large','play','progress','current-time','mute','volume', uniqueQualities.length > 1 ? 'settings' : ''].filter(Boolean),
               settings: ['quality'],
@@ -526,6 +622,7 @@
               }
             });
 
+            // Trigger safe non-interactive playback (Browser policy handles pause/play button display dynamically)
             video.play().catch(()=>{});
           });
 
@@ -533,6 +630,7 @@
             if (data.fatal) {
               switch (data.type) {
                 case Hls.ErrorTypes.NETWORK_ERROR:
+                  console.warn("Network error encountered.");
                   if (retryCount < MAX_RETRIES) {
                     retryCount++;
                     statusText.textContent = `RECONNECTING... (${retryCount}/${MAX_RETRIES})`;
@@ -543,6 +641,7 @@
                   }
                   break;
                 case Hls.ErrorTypes.MEDIA_ERROR:
+                  console.warn("Media error encountered, trying to recover.");
                   if (retryCount < MAX_RETRIES) {
                     retryCount++;
                     hls.recoverMediaError();
@@ -558,17 +657,21 @@
           });
         }
 
+        // Watermark fading logic
         function resetWm() {
           if (!wm.classList.contains('visible')) return;
-          wm.style.opacity = '0.5';
+          wm.style.opacity = '0.4';
           clearTimeout(wmTimer);
-          wmTimer = setTimeout(() => { if (!video.paused) wm.style.opacity = '0.2'; }, 3000);
+          wmTimer = setTimeout(() => { if (!video.paused && wm.classList.contains('visible')) wm.style.opacity = '0.2'; }, 3000);
         }
         video.addEventListener('play', resetWm);
-        video.addEventListener('pause', () => { if (wm.classList.contains('visible')) wm.style.opacity = '0.5'; });
+        video.addEventListener('pause', () => {
+          if (wm.classList.contains('visible')) wm.style.opacity = '0.4';
+        });
         document.addEventListener('mousemove', resetWm);
         document.addEventListener('touchstart', resetWm);
 
+        // Start 
         initPlayer(DIRECT_SRC);
       })();
     </script>
