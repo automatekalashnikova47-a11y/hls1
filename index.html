@@ -304,8 +304,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 20;
-  pointer-events: none;
+  z-index: 100; /* Higher than #loader-screen (50) */
+  pointer-events: auto; /* Allows users to click the ad/skip button */
 }
       
     </style>
