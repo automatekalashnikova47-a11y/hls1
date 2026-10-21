@@ -3,25 +3,25 @@
   <head>
     <title>SPORTSTRACK LIVE</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <meta name="description" content="Live match stream player" />
+    <meta name="description" content="Live match stream player with VAST ads" />
     <meta name="author" content="SportsTrack" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    
-    <!-- Dependencies -->
+
+    <!-- External Fonts & Libraries -->
     <link rel="preconnect" href="https://cdn.plyr.io" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- HLS.js, Plyr & Google IMA SDK for VAST Ads -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
-    <!-- Google IMA SDK for VAST Ads -->
-    <script src="//imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    
-    <!-- Keyboard/Right-click Protection -->
+    <script src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
+
+    <!-- Protection Script -->
     <script>
       document.addEventListener("contextmenu", e => e.preventDefault(), false);
       document.addEventListener("keydown", e => {
@@ -51,7 +51,7 @@
         color: #fff;
       }
 
-      /* ── BACKGROUND GRID ── */
+      /* Background Grid */
       .bg-grid {
         position: absolute;
         inset: 0;
@@ -66,7 +66,7 @@
         opacity: 0.35;
       }
 
-      /* ── SCREENS ── */
+      /* Screens (Loader & Error) */
       .screen {
         position: absolute;
         inset: 0;
@@ -85,9 +85,9 @@
         pointer-events: none;
       }
 
-      /* ── LOADER SCREEN ── */
+      /* Loader Screen */
       #loader-screen { z-index: 50; }
-      
+
       .brand-title {
         font-family: 'Bebas Neue', sans-serif;
         font-size: clamp(32px, 6vw, 48px);
@@ -142,12 +142,12 @@
         padding-left: clamp(3px, 1vw, 5px);
       }
 
-      /* ── ERROR SCREEN ── */
+      /* Error Screen */
       #error-screen {
         z-index: 60;
         background: var(--bg-dark);
       }
-      
+
       .lightning-icon {
         width: clamp(32px, 5vw, 42px);
         height: clamp(32px, 5vw, 42px);
@@ -193,7 +193,7 @@
         box-shadow: 0 6px 20px rgba(65, 105, 225, 0.35);
       }
 
-      /* ── PLAYER & WATERMARKS ── */
+      /* Player Wrapper & Ad Container Overlay */
       #player-wrap {
         width: 100%;
         height: 100%;
@@ -205,16 +205,23 @@
       .plyr { width: 100% !important; height: 100% !important; position: relative; font-weight: 600; }
       .plyr--video, .plyr__video-wrapper { height: 100% !important; }
       .plyr video { height: 100% !important; object-fit: contain; }
-      
-      /* Ad Container for Google IMA */
+
+      /* IMA Ad Container Overlay */
       #ad-container {
         position: absolute;
-        inset: 0;
-        z-index: 104;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 101;
         pointer-events: auto;
       }
+      #ad-container.hidden {
+        display: none !important;
+        pointer-events: none;
+      }
 
-      /* Watermark Top Left (Join) */
+      /* Watermark Top Left */
       #join-btn {
         position: absolute;
         top: 8px;
@@ -273,7 +280,7 @@
         pointer-events: none;
       }
 
-      /* Watermark Bottom Center - Default hidden until stream loads */
+      /* Watermark Bottom Center */
       #wm {
         position: absolute;
         bottom: 48px;
@@ -300,18 +307,16 @@
       .wm-name span { color: var(--brand-blue); }
       .wm-url { font-size: 8px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.6); text-transform: uppercase; }
 
-      /* Hidden helper utility class */
       .hidden { display: none !important; }
     </style>
   </head>
   <body>
-
-    <!-- BACKGROUND GRID -->
+    <!-- Background Grid -->
     <div class="bg-grid"></div>
 
-    <!-- LOADER SCREEN -->
+    <!-- Loader Screen -->
     <div id="loader-screen" class="screen">
-      <h1 class="brand-title">STREAM<span>47</span></h1>
+      <h1 class="brand-title">SPORTS<span>TRACK</span></h1>
       <div class="dots-container">
         <div class="dot"></div>
         <div class="dot"></div>
@@ -321,7 +326,7 @@
       <p class="status-text" id="status-text">ESTABLISHING CONNECTION...</p>
     </div>
 
-    <!-- ERROR SCREEN -->
+    <!-- Error Screen -->
     <div id="error-screen" class="screen hidden">
       <svg class="lightning-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="#dca952" stroke-width="1.5" stroke-linejoin="round"/>
@@ -331,11 +336,11 @@
       <button class="retry-btn" onclick="location.reload()">RETRY</button>
     </div>
 
-    <!-- PLAYER WRAPPER -->
+    <!-- Player Wrapper -->
     <div id="player-wrap">
       <a id="join-btn" href="https://www.whatsapp.com/channel/0029Vb7Jqva5K3zLauUJSv2s" target="_blank">JOIN US</a>
-      
-      <!-- CUSTOM FULLSCREEN BUTTON -->
+
+      <!-- Custom Fullscreen Button -->
       <button id="custom-fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
         <svg class="fs-icon-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
@@ -344,14 +349,15 @@
           <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"/>
         </svg>
       </button>
-      
-      <!-- Google IMA Ad Container -->
-      <div id="ad-container"></div>
 
+      <!-- Overlay for VAST Ads -->
+      <div id="ad-container" class="hidden"></div>
+
+      <!-- Video Element -->
       <video id="player" controls playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true"></video>
     </div>
 
-    <!-- WATERMARK -->
+    <!-- Watermark -->
     <div id="wm">
       <div class="wm-rule"></div>
       <div class="wm-inner">
@@ -370,25 +376,26 @@
         let wmTimer = null;
         const MAX_RETRIES = 3;
 
-        // IMA VAST Variables
+        // VAST Tag Configuration
+        const VAST_TAG_URL = "https://youradexchange.com/video/select.php?r=12342954";
+
+        // IMA SDK variables
         let adsLoader = null;
         let adsManager = null;
         let adDisplayContainer = null;
-        let adPlayed = false;
-        const VAST_TAG_URL = "https://youradexchange.com/video/select.php?r=12342954";
+        let adsInitialized = false;
 
         const params = new URLSearchParams(window.location.search);
         const DIRECT_SRC = params.get('url') || params.get('stream') || params.get('get') || params.get('src') || '';
 
         const video = document.getElementById('player');
+        const adContainer = document.getElementById('ad-container');
         const loaderScreen = document.getElementById('loader-screen');
         const errorScreen = document.getElementById('error-screen');
         const statusText = document.getElementById('status-text');
         const wm = document.getElementById('wm');
         const customFsBtn = document.getElementById('custom-fs-btn');
-        const adContainer = document.getElementById('ad-container');
 
-        // Robust Fullscreen Switch
         window.toggleFullscreen = function() {
           const wrapper = document.getElementById('player-wrap');
           const isFS = document.fullscreenElement || 
@@ -473,6 +480,92 @@
           wm.classList.add('visible');
         }
 
+        function initAdPlayer() {
+          if (typeof google === 'undefined' || !google.ima) {
+            console.warn("Google IMA SDK failed to load. Skipping instream ad.");
+            startStreamPlayback();
+            return;
+          }
+
+          adDisplayContainer = new google.ima.AdDisplayContainer(adContainer, video);
+          adsLoader = new google.ima.AdsLoader(adDisplayContainer);
+
+          adsLoader.addEventListener(
+            google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
+            onAdsManagerLoaded,
+            false
+          );
+          adsLoader.addEventListener(
+            google.ima.AdErrorEvent.Type.AD_ERROR,
+            onAdError,
+            false
+          );
+
+          // User interaction required to initialize display container on mobile
+          const initializeAdsAndPlay = () => {
+            if (!adsInitialized) {
+              adDisplayContainer.initialize();
+              adsInitialized = true;
+            }
+          };
+
+          video.addEventListener('play', initializeAdsAndPlay, { once: true });
+
+          // Request Ads
+          const adsRequest = new google.ima.AdsRequest();
+          adsRequest.adTagUrl = VAST_TAG_URL;
+          adsRequest.linearAdSlotWidth = video.clientWidth || 640;
+          adsRequest.linearAdSlotHeight = video.clientHeight || 360;
+          adsRequest.nonLinearAdSlotWidth = video.clientWidth || 640;
+          adsRequest.nonLinearAdSlotHeight = (video.clientHeight || 360) / 3;
+
+          adsLoader.requestAds(adsRequest);
+        }
+
+        function onAdsManagerLoaded(adsManagerLoadedEvent) {
+          const adsRenderingSettings = new google.ima.AdsRenderingSettings();
+          adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
+
+          adsManager = adsManagerLoadedEvent.getAdsManager(video, adsRenderingSettings);
+
+          adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdError);
+          adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED, onContentPauseRequested);
+          adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, onContentResumeRequested);
+          adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, onAllAdsCompleted);
+
+          try {
+            adContainer.classList.remove('hidden');
+            adsManager.init(video.clientWidth || 640, video.clientHeight || 360, google.ima.ViewMode.NORMAL);
+            adsManager.start();
+          } catch (adError) {
+            console.warn("AdsManager error:", adError);
+            onContentResumeRequested();
+          }
+        }
+
+        function onAdError(adErrorEvent) {
+          console.warn("Ad Error:", adErrorEvent.getError());
+          if (adsManager) {
+            adsManager.destroy();
+          }
+          adContainer.classList.add('hidden');
+          startStreamPlayback();
+        }
+
+        function onContentPauseRequested() {
+          video.pause();
+          adContainer.classList.remove('hidden');
+        }
+
+        function onContentResumeRequested() {
+          adContainer.classList.add('hidden');
+          startStreamPlayback();
+        }
+
+        function onAllAdsCompleted() {
+          adContainer.classList.add('hidden');
+        }
+
         if (!DIRECT_SRC) {
           triggerError('No stream URL provided. Add ?url=<m3u8-link> to the page URL.');
           return;
@@ -502,94 +595,18 @@
         video.addEventListener('canplay', onVideoReadyToPlay);
         video.addEventListener('loadedmetadata', onVideoReadyToPlay);
 
-        // Google IMA VAST Ad Setup
-        function initAds() {
-          try {
-            adDisplayContainer = new google.ima.AdDisplayContainer(adContainer, video);
-            adsLoader = new google.ima.AdsLoader(adDisplayContainer);
-
-            adsLoader.addEventListener(
-              google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
-              onAdsManagerLoaded,
-              false
-            );
-            adsLoader.addEventListener(
-              google.ima.AdsErrorEvent.Type.ADS_ERROR,
-              onAdsError,
-              false
-            );
-
-            // Let container know content is ready / user interacted
-            adDisplayContainer.initialize();
-            requestAds();
-          } catch (e) {
-            // Fallback to playing stream directly if ad container fails
-            startLiveStream(DIRECT_SRC);
+        function startStreamPlayback() {
+          if (video.paused && video.src) {
+            video.play().catch(()=>{});
           }
         }
 
-        function requestAds() {
-          try {
-            const adsRequest = new google.ima.AdsRequest();
-            adsRequest.adTagUrl = VAST_TAG_URL;
-            adsRequest.linearAdSlotWidth = video.clientWidth || 640;
-            adsRequest.linearAdSlotHeight = video.clientHeight || 360;
-            adsRequest.nonLinearAdSlotWidth = video.clientWidth || 640;
-            adsRequest.nonLinearAdSlotHeight = video.clientHeight || 150;
-            adsLoader.requestAds(adsRequest);
-          } catch (e) {
-            startLiveStream(DIRECT_SRC);
-          }
-        }
-
-        function onAdsManagerLoaded(quakeEvent) {
-          const adsRenderingSettings = new google.ima.AdsRenderingSettings();
-          adsRenderingSettings.restoreCustomPlaybackStateOnAdFinish = true;
-          
-          try {
-            adsManager = quakeEvent.getAdsManager(video, adsRenderingSettings);
-
-            adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED, () => {
-              if (video && typeof video.pause === 'function') video.pause();
-            });
-            adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, () => {
-              if (!adPlayed) {
-                adPlayed = true;
-                adContainer.style.display = 'none';
-                startLiveStream(DIRECT_SRC);
-              }
-            });
-            adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, () => {
-              if (!adPlayed) {
-                adPlayed = true;
-                adContainer.style.display = 'none';
-                startLiveStream(DIRECT_SRC);
-              }
-            });
-
-            adsManager.init(video.clientWidth || 640, video.clientHeight || 360, google.ima.ViewMode.NORMAL);
-            adsManager.start();
-          } catch (ex) {
-            adContainer.style.display = 'none';
-            startLiveStream(DIRECT_SRC);
-          }
-        }
-
-        function onAdsError(adErrorEvent) {
-          console.warn('Ad error: ' + adErrorEvent.getError());
-          if (adsManager) adsManager.destroy();
-          adContainer.style.display = 'none';
-          startLiveStream(DIRECT_SRC);
-        }
-
-        // Initialize Live Stream after ad
-        function startLiveStream(srcUrl) {
-          adContainer.style.display = 'none';
-
+        function initPlayer(srcUrl) {
           if (!Hls.isSupported() && video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = srcUrl;
             plyr = new Plyr(video, { controls: ['play-large','play','progress','current-time','mute','volume'] });
-            video.play().catch(()=>{});
+
+            initAdPlayer();
             video.addEventListener('error', () => triggerError('Native playback failed. The stream might be offline or unsupported.'));
             return;
           }
@@ -629,7 +646,8 @@
               }
             });
 
-            video.play().catch(()=>{});
+            // Initialize Instream VAST Ad via Google IMA
+            initAdPlayer();
           });
 
           hls.on(Hls.Events.ERROR, (event, data) => {
@@ -672,37 +690,7 @@
         document.addEventListener('mousemove', resetWm);
         document.addEventListener('touchstart', resetWm);
 
-        // Kick off ads or fallback directly to stream on user interaction / page load
-        // Most browsers require user interaction to play video with audio, so we hook onto the first click/touch or initialize immediately if allowed.
-        let initiated = false;
-        function triggerPlaybackStart() {
-          if (initiated) return;
-          initiated = true;
-          document.removeEventListener('click', triggerPlaybackStart);
-          document.removeEventListener('touchstart', triggerPlaybackStart);
-          
-          statusText.textContent = "PLAYING AD...";
-          
-          // Initialize Google IMA Ads
-          if (typeof google !== 'undefined' && google.ima) {
-            initAds();
-          } else {
-            // Fallback if IMA SDK blocked/failed
-            adContainer.style.display = 'none';
-            startLiveStream(DIRECT_SRC);
-          }
-        }
-
-        document.addEventListener('click', triggerPlaybackStart, { once: true });
-        document.addEventListener('touchstart', triggerPlaybackStart, { once: true });
-
-        // Attempt autoplay trigger
-        setTimeout(() => {
-          if (!initiated) {
-            triggerPlaybackStart();
-          }
-        }, 500);
-
+        initPlayer(DIRECT_SRC);
       })();
     </script>
   </body>
