@@ -2,22 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Stream Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STREAM 47 - Live Stream</title>
   
-  <!-- External CSS Dependencies -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.css">
+  <!-- Fonts & External CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+
+  <!-- HLS.js & Plyr.js Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.polyfilled.min.js"></script>
+  <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
   <style>
     :root {
+      --bg-dark: #080a09;
       --brand-blue: #4169E1;
       --brand-blue-glow: rgba(65, 105, 225, 0.6);
-      --bg-dark: #0a0a0c;
+      --brand-white: #ffffff;
+      --text-muted: #8a99ad;
+      --font-brand: 'Bebas Neue', sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     * {
@@ -32,9 +38,9 @@
       width: 100%;
       height: 100%;
       background-color: var(--bg-dark);
-      font-family: 'Inter', sans-serif;
-      color: #ffffff;
+      font-family: var(--font-body);
       overflow: hidden;
+      color: #fff;
     }
 
     /* ── SCREENS ── */
@@ -46,9 +52,10 @@
       align-items: center;
       justify-content: center;
       z-index: 10;
-      background: radial-gradient(circle at center, #0f1712 0%, var(--bg-dark) 100%);
+      background: radial-gradient(circle at center, #0e1319 0%, var(--bg-dark) 100%);
       transition: opacity 0.5s ease, visibility 0.5s ease;
       text-align: center;
+      padding: 20px;
     }
     .screen.hidden {
       opacity: 0;
@@ -57,62 +64,131 @@
     }
 
     /* ── LOADER SCREEN ── */
-    #loader-screen { z-index: 50; }
-
-    /* Centered Glowing Brand Title with pulsing animation */
-    .brand-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 64px;
-      letter-spacing: 4px;
-      line-height: 1;
-      text-align: center;
-      color: #ffffff;
-      animation: brandGlow 2s ease-in-out infinite alternate;
+    #loader-screen { 
+      z-index: 50; 
     }
-    .brand-title span { color: var(--brand-blue); }
+
+    .loader-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Brand Glow Animation */
+    .brand-title {
+      font-family: var(--font-brand);
+      font-size: 68px;
+      letter-spacing: 3px;
+      line-height: 1;
+      color: #ffffff;
+      text-shadow: 0 0 25px rgba(255, 255, 255, 0.4), 0 0 45px var(--brand-blue-glow);
+      animation: brandGlow 2.5s ease-in-out infinite alternate;
+      margin-bottom: 18px;
+    }
+    .brand-title span { 
+      color: var(--brand-blue); 
+      text-shadow: 0 0 25px var(--brand-blue-glow), 0 0 40px rgba(65, 105, 225, 0.8);
+    }
 
     @keyframes brandGlow {
       0% {
-        text-shadow: 0 0 10px rgba(65, 105, 225, 0.4), 0 0 20px rgba(65, 105, 225, 0.2);
-        transform: scale(0.98);
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.3), 0 0 30px var(--brand-blue-glow);
+        transform: scale(1);
       }
       100% {
-        text-shadow: 0 0 25px rgba(65, 105, 225, 0.9), 0 0 45px rgba(65, 105, 225, 0.6);
+        text-shadow: 0 0 30px rgba(255, 255, 255, 0.6), 0 0 60px rgba(65, 105, 225, 0.9);
         transform: scale(1.02);
+      }
+    }
+
+    /* Three Dots Loader (Matching Image) */
+    .loader-dots {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .loader-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--brand-blue);
+      box-shadow: 0 0 12px var(--brand-blue-glow);
+      animation: dotPulse 1.4s infinite ease-in-out both;
+    }
+    .loader-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loader-dots span:nth-child(2) { animation-delay: -0.16s; }
+    .loader-dots span:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes dotPulse {
+      0%, 80%, 100% { 
+        transform: scale(0.6); 
+        opacity: 0.3;
+      }
+      40% { 
+        transform: scale(1.2); 
+        opacity: 1;
+        box-shadow: 0 0 18px var(--brand-blue);
       }
     }
 
     .subtitle {
       font-size: 13px;
-      letter-spacing: 2px;
-      color: rgba(255, 255, 255, 0.7);
-      margin-top: 16px;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 6px;
+      color: #e0e6ed;
       text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      margin-bottom: 36px;
+      opacity: 0.9;
     }
 
-    /* Preserved ... Dots Loading Animation */
-    .connecting-dots {
-      display: inline-flex;
-      gap: 4px;
+    .status-text {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
     }
-    .dot {
-      width: 4px;
-      height: 4px;
-      background-color: var(--brand-blue);
-      border-radius: 50%;
-      display: inline-block;
-      animation: dotPulse 1.4s infinite ease-in-out both;
+
+    /* ── ERROR SCREEN ── */
+    #error-screen { z-index: 40; }
+    .error-icon {
+      width: 50px;
+      height: 50px;
+      margin-bottom: 16px;
+      color: #ff4d4d;
     }
-    .dot:nth-child(1) { animation-delay: -0.32s; }
-    .dot:nth-child(2) { animation-delay: -0.16s; }
-    @keyframes dotPulse {
-      0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
-      40% { transform: scale(1); opacity: 1; }
+    .error-title {
+      font-family: var(--font-brand);
+      font-size: 32px;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      color: #ff4d4d;
+    }
+    .error-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 320px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .retry-btn {
+      background: rgba(65, 105, 225, 0.2);
+      border: 1px solid var(--brand-blue);
+      color: #fff;
+      padding: 8px 24px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .retry-btn:hover {
+      background: var(--brand-blue);
+      box-shadow: 0 0 15px var(--brand-blue-glow);
     }
 
     /* ── PLAYER & WATERMARKS ── */
@@ -179,8 +255,13 @@
       box-shadow: 0 0 8px var(--brand-blue-glow);
       transform: scale(1.05);
     }
-    #custom-fs-btn svg { width: 14px; height: 14px; fill: currentColor; }
+    #custom-fs-btn svg {
+      width: 15px;
+      height: 15px;
+      fill: currentColor;
+    }
 
+    /* Hide Overlays when Controls Hide */
     .plyr--hide-controls #join-btn,
     .plyr--hide-controls #custom-fs-btn {
       opacity: 0 !important;
@@ -235,41 +316,35 @@
       visibility: visible;
     }
 
-    /* Error Screen Styles */
-    .error-icon {
-      width: 48px;
-      height: 48px;
-      color: #ff4757;
-      margin-bottom: 12px;
+    .dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--brand-blue);
+      border-radius: 50%;
+      animation: dotPulse 1.2s infinite ease-in-out both;
     }
-    .error-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 6px;
-    }
-    .error-desc {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.5);
-      max-width: 280px;
-      line-height: 1.4;
-    }
+    .dot:nth-child(1) { animation-delay: -0.32s; }
+    .dot:nth-child(2) { animation-delay: -0.16s; }
 
+    /* Helper utility class */
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-  <!-- LOADER SCREEN -->
+  <!-- LOADER SCREEN (Matches Reference Image Layout) -->
   <div id="loader-screen" class="screen">
-    <div class="brand-title">STREAM <span>47</span></div>
-    <div class="subtitle">
-      <span id="status-text">CONNECTING</span>
-      <div class="connecting-dots">
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
+    <div class="loader-content">
+      <h1 class="brand-title">STREAM<span>47</span></h1>
+      
+      <div class="loader-dots">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
+
+      <div class="subtitle">LIVE MATCH CENTER</div>
+      <div id="status-text" class="status-text">ESTABLISHING CONNECTION...</div>
     </div>
   </div>
 
@@ -280,8 +355,9 @@
       <line x1="12" y1="8" x2="12" y2="12"></line>
       <line x1="12" y1="16" x2="12.01" y2="16"></line>
     </svg>
-    <div class="error-title">STREAM OFFLINE</div>
-    <div id="error-desc" class="error-desc">Unable to load the requested video stream. Please check your link or try again later.</div>
+    <div class="error-title">STREAM UNAVAILABLE</div>
+    <div id="error-desc" class="error-desc">Unable to load the requested video stream. Please check your internet connection or stream URL.</div>
+    <button class="retry-btn" onclick="retryStream()">RETRY CONNECTION</button>
   </div>
 
   <!-- PLAYER WRAPPER -->
@@ -297,22 +373,25 @@
 
     <!-- CUSTOM FULLSCREEN BUTTON -->
     <button id="custom-fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
-      <svg viewBox="0 0 24 24">
+      <svg id="fs-icon-enter" viewBox="0 0 24 24">
         <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+      </svg>
+      <svg id="fs-icon-exit" class="hidden" viewBox="0 0 24 24">
+        <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
       </svg>
     </button>
 
-    <!-- WATERMARK BOTTOM CENTER -->
-    <div id="wm">
-      <div class="wm-rule"></div>
-      <div class="wm-inner">
-        <div class="wm-name">STREAM <span>47</span></div>
-        <div class="wm-url">STREAM47.BLOGSPOT.COM</div>
-      </div>
-      <div class="wm-rule r"></div>
-    </div>
+    <video id="player" playsinline controls></video>
+  </div>
 
-    <video id="player" playsinline crossorigin="anonymous"></video>
+  <!-- WATERMARK (Bottom Center) -->
+  <div id="wm">
+    <div class="wm-rule"></div>
+    <div class="wm-inner">
+      <div class="wm-name">STREAM<span>47</span></div>
+      <div class="wm-url">STREAM47.BLOGSPOT.COM</div>
+    </div>
+    <div class="wm-rule r"></div>
   </div>
 
   <script>
@@ -339,14 +418,23 @@
       // Robust Fullscreen Switch
       window.toggleFullscreen = function() {
         if (!plyr) return;
-        if (plyr.fullscreen.active) {
-          plyr.fullscreen.exit();
-        } else {
-          plyr.fullscreen.enter();
-        }
+        plyr.fullscreen.toggle();
       };
 
-      function lockLandscape() {
+      function updateFsIcons(isFullscreen) {
+        const enterIcon = document.getElementById('fs-icon-enter');
+        const exitIcon = document.getElementById('fs-icon-exit');
+        if (isFullscreen) {
+          enterIcon.classList.add('hidden');
+          exitIcon.classList.remove('hidden');
+        } else {
+          enterIcon.classList.remove('hidden');
+          exitIcon.classList.add('hidden');
+        }
+      }
+
+      // Mobile Landscape Orientation Auto-Lock
+      function lockLandscape(){
         try {
           const scr = screen.orientation || screen.msOrientation;
           if (scr && scr.lock) scr.lock('landscape').catch(() => {});
@@ -359,10 +447,17 @@
           if (scr && scr.unlock) scr.unlock();
         } catch(e) {}
       }
-      document.addEventListener('fullscreenchange', () => { if (document.fullscreenElement) lockLandscape(); else unlockOrientation(); });
-      video.addEventListener('webkitbeginfullscreen', lockLandscape);
-      video.addEventListener('webkitendfullscreen', unlockOrientation);
 
+      document.addEventListener('fullscreenchange', () => { 
+        const isFs = !!document.fullscreenElement;
+        updateFsIcons(isFs);
+        if (isFs) lockLandscape(); else unlockOrientation(); 
+      });
+
+      video.addEventListener('webkitbeginfullscreen', () => lockLandscape());
+      video.addEventListener('webkitendfullscreen', () => unlockOrientation());
+
+      // Error triggers and dismantles components cleanly
       function triggerError(msg) {
         clearTimeout(hardTimeout);
         loaderScreen.classList.add('hidden');
@@ -375,9 +470,13 @@
 
       function mountWm(){
         const p = document.querySelector('.plyr');
-        if (p && !p.contains(wm)) { p.style.position = 'relative'; p.appendChild(wm); }
+        if (p && !p.contains(wm)) { 
+          p.style.position = 'relative'; 
+          p.appendChild(wm); 
+        }
       }
 
+      // Hides Loader Screen and configures Watermark alignment
       function onVideoReadyToPlay() {
         clearTimeout(hardTimeout);
         loaderScreen.classList.add('hidden');
@@ -409,27 +508,35 @@
       video.addEventListener('loadedmetadata', onVideoReadyToPlay);
 
       // Core Player Setup
-      function initPlayer(src) {
+      function initPlayer(sourceUrl) {
+        loaderScreen.classList.remove('hidden');
+        errorScreen.classList.add('hidden');
+        statusText.textContent = "ESTABLISHING CONNECTION...";
+
+        // Set safety timeout (18s)
         clearTimeout(hardTimeout);
         hardTimeout = setTimeout(() => {
-          if (!video.readyState) triggerError('Connection timed out. Stream server took too long to respond.');
-        }, 20000);
+          if (!video.currentTime && loaderScreen.classList.contains('hidden') === false) {
+            triggerError("Connection timed out. Stream took too long to respond.");
+          }
+        }, 18000);
 
         if (Hls.isSupported()) {
           if (hls) hls.destroy();
+
           hls = new Hls({
             enableWorker: true,
             lowLatencyMode: true,
             backBufferLength: 90
           });
 
-          hls.loadSource(src);
+          hls.loadSource(sourceUrl);
           hls.attachMedia(video);
 
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            initPlyr();
+            setupPlyr();
             video.play().catch(() => {
-              // Autoplay blocked by browser; ready state handler will show play controls
+              // Autoplay block handler
             });
           });
 
@@ -439,36 +546,42 @@
                 case Hls.ErrorTypes.NETWORK_ERROR:
                   if (retryCount < MAX_RETRIES) {
                     retryCount++;
-                    statusText.textContent = `RETRYING (${retryCount}/${MAX_RETRIES})`;
+                    statusText.textContent = `RECONNECTING (${retryCount}/${MAX_RETRIES})...`;
                     hls.startLoad();
                   } else {
-                    triggerError('Network error encountered. Could not load the stream source.');
+                    triggerError("Network error: Unable to fetch live stream segments.");
                   }
                   break;
                 case Hls.ErrorTypes.MEDIA_ERROR:
                   hls.recoverMediaError();
                   break;
                 default:
-                  triggerError('Fatal stream error occurred. Unable to play video.');
+                  triggerError("Fatal playback error occurred.");
                   break;
               }
             }
           });
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = src;
-          initPlyr();
+          // Safari Native HLS Support
+          video.src = sourceUrl;
+          setupPlyr();
           video.play().catch(() => {});
         } else {
-          triggerError('Your browser does not support HLS stream playback.');
+          triggerError("Your browser does not support HLS stream playback.");
         }
       }
 
-      function initPlyr() {
+      function setupPlyr() {
         if (plyr) return;
+
         plyr = new Plyr(video, {
-          controls: ['play-large', 'play', 'mute', 'volume', 'pip', 'airplay'],
-          fullscreen: { enabled: true, fallback: true, iosNative: true },
-          keyboard: { focused: true, global: true }
+          controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+          keyboard: { focused: true, global: true },
+          tooltips: { controls: true, seek: true }
+        });
+
+        plyr.on('fullscreenchange', (event) => {
+          updateFsIcons(event.detail.plyr.fullscreen.active);
         });
       }
 
@@ -477,8 +590,13 @@
         if (!wm.classList.contains('visible')) return;
         wm.style.opacity = '0.4';
         clearTimeout(wmTimer);
-        wmTimer = setTimeout(() => { if (!video.paused && wm.classList.contains('visible')) wm.style.opacity = '0.2'; }, 3000);
+        wmTimer = setTimeout(() => { 
+          if (!video.paused && wm.classList.contains('visible')) {
+            wm.style.opacity = '0.2'; 
+          }
+        }, 3000);
       }
+
       video.addEventListener('play', resetWm);
       video.addEventListener('pause', () => {
         if (wm.classList.contains('visible')) wm.style.opacity = '0.4';
@@ -486,7 +604,12 @@
       document.addEventListener('mousemove', resetWm);
       document.addEventListener('touchstart', resetWm);
 
-      // Start Initialization
+      window.retryStream = function() {
+        retryCount = 0;
+        initPlayer(DIRECT_SRC);
+      };
+
+      // Start player initialization
       initPlayer(DIRECT_SRC);
     });
   </script>
