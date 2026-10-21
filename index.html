@@ -16,7 +16,7 @@
   <style>
     :root {
       --brand-blue: #4169e1;
-      --brand-blue-glow: rgba(65, 105, 225, 0.6);
+      --brand-blue-glow: rgba(65, 105, 225, 0.65);
       --bg-dark: #050806;
       --plyr-color-main: #4169e1;
     }
@@ -37,7 +37,6 @@
       color: #fff;
     }
 
-    /* ── SCREENS ── */
     .screen {
       position: absolute;
       inset: 0;
@@ -284,7 +283,6 @@
     .wm-name span { color: var(--brand-blue); }
     .wm-url { font-size: 10px; font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,0.6); text-transform: uppercase; white-space: nowrap; }
 
-    /* In-Player Buffering Spinner */
     #buffering-indicator {
       position: absolute;
       top: 50%;
@@ -391,22 +389,59 @@
     const customFsBtn = document.getElementById('custom-fs-btn');
     const bufferingIndicator = document.getElementById('buffering-indicator');
 
-    // Robust Fullscreen Switch
+    // Robust Multi-Fallback Fullscreen Handler (Supports iframe embedding)
     window.toggleFullscreen = function() {
-      if (plyr) {
-        plyr.fullscreen.toggle();
-      } else {
-        const wrap = document.getElementById('player-wrap');
-        if (!document.fullscreenElement) {
-          if (wrap.requestFullscreen) wrap.requestFullscreen();
-          else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
-          else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+      const wrap = document.getElementById('player-wrap') || document.documentElement;
+
+      if (plyr && plyr.fullscreen && typeof plyr.fullscreen.toggle === 'function') {
+        try {
+          plyr.fullscreen.toggle();
+          return;
+        } catch (e) {
+          console.warn('Plyr fullscreen API failed, falling back to browser Native API:', e);
+        }
+      }
+
+      // Check active fullscreen element
+      const isFS = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+
+      if (!isFS) {
+        if (wrap.requestFullscreen) {
+          wrap.requestFullscreen().catch(() => requestParentFullscreen());
+        } else if (wrap.webkitRequestFullscreen) {
+          wrap.webkitRequestFullscreen();
+        } else if (wrap.mozRequestFullScreen) {
+          wrap.mozRequestFullScreen();
+        } else if (wrap.msRequestFullscreen) {
+          wrap.msRequestFullscreen();
+        } else if (video.webkitEnterFullscreen) {
+          video.webkitEnterFullscreen();
         } else {
-          if (document.exitFullscreen) document.exitFullscreen();
-          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+          requestParentFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
         }
       }
     };
+
+    // PostMessage fallback trigger for restricted cross-origin iframes
+    function requestParentFullscreen() {
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'REQUEST_FULLSCREEN' }, '*');
+        }
+      } catch (e) {
+        console.warn('Cross-origin postMessage blocked:', e);
+      }
+    }
 
     // Error triggers and dismantles components cleanly
     function triggerError(msg) {
@@ -466,7 +501,7 @@
       }
     });
 
-    // Hide Loader as soon as video plays OR is ready to be played (handling autoplay block)
+    // Hide Loader as soon as video plays OR is ready to be played
     video.addEventListener('playing', onVideoReadyToPlay);
     video.addEventListener('canplay', onVideoReadyToPlay);
     video.addEventListener('loadedmetadata', onVideoReadyToPlay);
@@ -599,7 +634,7 @@
     document.addEventListener('mousemove', resetWm);
     document.addEventListener('touchstart', resetWm);
 
-    // Start 
+    // Start Player Initialization
     initPlayer(DIRECT_SRC);
   </script>
 </body>
