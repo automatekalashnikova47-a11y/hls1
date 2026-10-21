@@ -417,18 +417,53 @@
       const customFsBtn = document.getElementById('custom-fs-btn');
       const bufferingIndicator = document.getElementById('buffering-indicator');
 
-      // Robust Fullscreen Switch targeting Plyr / Container
+      // Comprehensive Cross-Origin Iframe Fullscreen Strategy
       window.toggleFullscreen = function() {
-        if (plyr && plyr.fullscreen) {
-          plyr.fullscreen.toggle();
+        const isFsActive = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+
+        if (isFsActive) {
+          // Exit fullscreen
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+          else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+          else if (document.msExitFullscreen) document.msExitFullscreen();
+          else if (video.webkitExitFullscreen) video.webkitExitFullscreen();
+          if (plyr && plyr.fullscreen && plyr.fullscreen.active) plyr.fullscreen.exit();
         } else {
-          if (!document.fullscreenElement) {
-            if (playerWrap.requestFullscreen) playerWrap.requestFullscreen();
-            else if (playerWrap.webkitRequestFullscreen) playerWrap.webkitRequestFullscreen();
-            else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-          } else {
-            if (document.exitFullscreen) document.exitFullscreen();
-            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+          // Enter fullscreen (Try all potential API hooks for cross-domain iframes)
+          let fsTriggered = false;
+
+          // 1. Plyr internal API
+          if (plyr && plyr.fullscreen && typeof plyr.fullscreen.enter === 'function') {
+            try {
+              plyr.fullscreen.enter();
+              fsTriggered = true;
+            } catch(e) {}
+          }
+
+          // 2. Standard HTML5 Request Fullscreen on Player Wrapper
+          if (!fsTriggered) {
+            const targetEl = playerWrap || document.documentElement;
+            const reqFs = targetEl.requestFullscreen || targetEl.webkitRequestFullscreen || targetEl.mozRequestFullScreen || targetEl.msRequestFullscreen;
+            if (reqFs) {
+              try {
+                reqFs.call(targetEl).catch(() => {
+                  // Fallback to video native iOS/Safari fullscreen if container fails
+                  if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+                });
+                fsTriggered = true;
+              } catch(e) {}
+            }
+          }
+
+          // 3. Fallback to native video webkitEnterFullscreen (iOS / Safari)
+          if (!fsTriggered && video.webkitEnterFullscreen) {
+            try { video.webkitEnterFullscreen(); fsTriggered = true; } catch(e) {}
+          }
+
+          // 4. Send postMessage to parent frame if embedded in strict iframe container
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'REQUEST_FULLSCREEN' }, '*');
           }
         }
       };
@@ -460,14 +495,17 @@
         } catch(e) {}
       }
 
-      document.addEventListener('fullscreenchange', () => { 
-        const isFs = !!document.fullscreenElement;
-        updateFsIcons(isFs);
-        if (isFs) lockLandscape(); else unlockOrientation(); 
+      const fsEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+      fsEvents.forEach(evt => {
+        document.addEventListener(evt, () => {
+          const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+          updateFsIcons(isFs);
+          if (isFs) lockLandscape(); else unlockOrientation(); 
+        });
       });
 
-      video.addEventListener('webkitbeginfullscreen', () => lockLandscape());
-      video.addEventListener('webkitendfullscreen', () => unlockOrientation());
+      video.addEventListener('webkitbeginfullscreen', () => { updateFsIcons(true); lockLandscape(); });
+      video.addEventListener('webkitendfullscreen', () => { updateFsIcons(false); unlockOrientation(); });
 
       function triggerError(msg) {
         clearTimeout(hardTimeout);
