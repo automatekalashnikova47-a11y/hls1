@@ -1,685 +1,679 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STREAM 47 - Live Stream Player</title>
-  
-  <!-- Fonts & External CSS -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
-
-  <!-- HLS.js & Plyr.js Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-
-  <style>
-    :root {
-      --bg-dark: #080a09;
-      --brand-blue: #4169E1;
-      --brand-blue-glow: rgba(65, 105, 225, 0.45);
-      --brand-white: #ffffff;
-      --text-muted: #8a99ad;
-      --font-brand: 'Bebas Neue', sans-serif;
-      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      background-color: var(--bg-dark);
-      font-family: var(--font-body);
-      overflow: hidden;
-      color: #fff;
-    }
-
-    /* ── SCREENS ── */
-    .screen {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-      background: radial-gradient(circle at center, #0e1319 0%, var(--bg-dark) 100%);
-      transition: opacity 0.5s ease, visibility 0.5s ease;
-      text-align: center;
-      padding: 3vh 3vw;
-    }
-    .screen.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    /* ── LOADER SCREEN (Compact 16:9 Scaled) ── */
-    #loader-screen { 
-      z-index: 50; 
-    }
-
-    .loader-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      max-width: 90%;
-      max-height: 90vh;
-    }
-
-    /* Scaled Brand Glow Animation for Small Iframe Heights */
-    .brand-title {
-      font-family: var(--font-brand);
-      font-size: clamp(32px, 8vh, 52px);
-      letter-spacing: 2px;
-      line-height: 1;
-      color: #ffffff;
-      text-shadow: 0 0 12px rgba(255, 255, 255, 0.3), 0 0 22px var(--brand-blue-glow);
-      animation: brandGlow 2.5s ease-in-out infinite alternate;
-      margin-bottom: clamp(8px, 2.2vh, 16px);
-    }
-    .brand-title span { 
-      color: var(--brand-blue); 
-      text-shadow: 0 0 15px var(--brand-blue-glow), 0 0 25px rgba(65, 105, 225, 0.6);
-    }
-
-    @keyframes brandGlow {
-      0% {
-        text-shadow: 0 0 8px rgba(255, 255, 255, 0.25), 0 0 15px var(--brand-blue-glow);
-        transform: scale(1);
-      }
-      100% {
-        text-shadow: 0 0 16px rgba(255, 255, 255, 0.5), 0 0 30px rgba(65, 105, 225, 0.75);
-        transform: scale(1.02);
-      }
-    }
-
-    /* Compact Three Dots Loader */
-    .loader-dots {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: clamp(6px, 1.5vw, 10px);
-      margin-bottom: clamp(12px, 2.5vh, 22px);
-    }
-    .loader-dots span {
-      width: clamp(6px, 1.2vh, 8px);
-      height: clamp(6px, 1.2vh, 8px);
-      border-radius: 50%;
-      background-color: var(--brand-blue);
-      box-shadow: 0 0 8px var(--brand-blue-glow);
-      animation: dotPulse 1.4s infinite ease-in-out both;
-    }
-    .loader-dots span:nth-child(1) { animation-delay: -0.32s; }
-    .loader-dots span:nth-child(2) { animation-delay: -0.16s; }
-    .loader-dots span:nth-child(3) { animation-delay: 0s; }
-
-    @keyframes dotPulse {
-      0%, 80%, 100% { 
-        transform: scale(0.6); 
-        opacity: 0.3;
-      }
-      40% { 
-        transform: scale(1.15); 
-        opacity: 1;
-        box-shadow: 0 0 12px var(--brand-blue);
-      }
-    }
-
-    .subtitle {
-      font-size: clamp(10px, 1.8vh, 12px);
-      font-weight: 700;
-      letter-spacing: clamp(3px, 0.8vw, 5px);
-      color: #e0e6ed;
-      text-transform: uppercase;
-      margin-bottom: clamp(14px, 3vh, 26px);
-      opacity: 0.85;
-    }
-
-    .status-text {
-      font-size: clamp(9px, 1.5vh, 10px);
-      font-weight: 700;
-      letter-spacing: clamp(2px, 0.6vw, 4px);
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
-
-    /* ── ERROR SCREEN ── */
-    #error-screen { z-index: 40; }
-    .error-icon {
-      width: clamp(32px, 6vh, 44px);
-      height: clamp(32px, 6vh, 44px);
-      margin-bottom: 12px;
-      color: #ff4d4d;
-    }
-    .error-title {
-      font-family: var(--font-brand);
-      font-size: clamp(22px, 4vh, 28px);
-      letter-spacing: 2px;
-      margin-bottom: 6px;
-      color: #ff4d4d;
-    }
-    .error-desc {
-      font-size: clamp(11px, 1.8vh, 12px);
-      color: var(--text-muted);
-      max-width: 280px;
-      line-height: 1.4;
-      margin-bottom: 16px;
-    }
-    .retry-btn {
-      background: rgba(65, 105, 225, 0.2);
-      border: 1px solid var(--brand-blue);
-      color: #fff;
-      padding: 6px 18px;
-      border-radius: 4px;
-      font-weight: 700;
-      font-size: clamp(10px, 1.5vh, 11px);
-      letter-spacing: 2px;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .retry-btn:hover {
-      background: var(--brand-blue);
-      box-shadow: 0 0 12px var(--brand-blue-glow);
-    }
-
-    /* ── PLAYER CONTAINER & OVERLAYS ── */
-    #player-wrap {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      background: #000;
-      z-index: 5;
-    }
-    video { width: 100%; height: 100%; display: block; }
-    .plyr { width: 100% !important; height: 100% !important; position: relative; font-weight: 600; }
-    .plyr--video, .plyr__video-wrapper { height: 100% !important; }
-    .plyr video { height: 100% !important; object-fit: contain; }
+  <head>
+    <title>SPORTSTRACK LIVE</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="description" content="Live match stream player" />
+    <meta name="author" content="SportsTrack" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     
-    /* Watermark Top Left (Join Button) */
-    #join-btn {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      z-index: 102;
-      color: rgba(255,255,255,0.7);
-      border: 1px solid rgba(255,255,255,0.3);
-      padding: 2px 8px;
-      border-radius: 3px;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 10px;
-      letter-spacing: 1px;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(4px);
-      transition: all 0.4s ease;
-      opacity: 0;
-      visibility: hidden;
-    }
-    #join-btn.visible { opacity: 1; visibility: visible; }
-    #join-btn:hover { color: #fff; border-color: #fff; background: rgba(0,0,0,0.7); }
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    
+    <!-- Dependencies -->
+    <link rel="preconnect" href="https://cdn.plyr.io" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Keyboard/Right-click Protection -->
+    <script>
+      document.addEventListener("contextmenu", e => e.preventDefault(), false);
+      document.addEventListener("keydown", e => {
+        if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) e.preventDefault();
+        if (e.ctrlKey && e.keyCode === 85) e.preventDefault();
+        if (e.keyCode === 123) e.preventDefault();
+      }, false);
+    </script>
 
-    /* Custom Overlay Fullscreen Button */
-    #custom-fs-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      z-index: 103;
-      background: rgba(0, 0, 0, 0.65);
-      border: 1px solid rgba(65, 105, 225, 0.3);
-      color: #fff;
-      width: 28px;
-      height: 28px;
-      border-radius: 3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.4s ease, transform 0.2s;
-      backdrop-filter: blur(4px);
-      opacity: 0;
-      visibility: hidden;
-    }
-    #custom-fs-btn.visible { opacity: 1; visibility: visible; }
-    #custom-fs-btn:hover {
-      background: rgba(65, 105, 225, 0.2);
-      border-color: var(--brand-blue);
-      box-shadow: 0 0 6px var(--brand-blue-glow);
-      transform: scale(1.05);
-    }
-    #custom-fs-btn svg {
-      width: 14px;
-      height: 14px;
-      fill: currentColor;
-    }
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Hide Overlays when Controls Hide */
-    .plyr--hide-controls #join-btn,
-    .plyr--hide-controls #custom-fs-btn {
-      opacity: 0 !important;
-      pointer-events: none;
-    }
+      :root {
+        --brand-blue: #4169E1;
+        --brand-blue-glow: rgba(65, 105, 225, 0.4);
+        --bg-dark: #080b09;
+        --text-dim: #9ca3af;
+        --plyr-color-main: #4169E1;
+      }
 
-    /* Watermark Bottom Center */
-    #wm {
-      position: absolute;
-      bottom: 46px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 102;
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.4s, visibility 0.4s;
-      width: max-content;
-      max-width: 85%;
-    }
-    #wm.visible {
-      visibility: visible;
-      opacity: 0.4;
-    }
-    .plyr--hide-controls #wm.visible { opacity: 0.2; }
-    .wm-rule { width: 20px; height: 1px; background: linear-gradient(90deg, transparent, var(--brand-blue)); flex-shrink: 0; }
-    .wm-rule.r { background: linear-gradient(90deg, var(--brand-blue), transparent); flex-shrink: 0; }
-    .wm-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; text-align: center; white-space: nowrap; }
-    .wm-name { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 3px; color: #fff; text-shadow: 0 2px 8px #000; }
-    .wm-name span { color: var(--brand-blue); }
-    .wm-url { font-size: 8.5px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.6); text-transform: uppercase; white-space: nowrap; }
+      html, body {
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg-dark);
+        overflow: hidden;
+        font-family: 'Rajdhani', sans-serif;
+        color: #fff;
+      }
 
-    /* In-Player Buffering Indicator */
-    #buffering-indicator {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 101;
-      display: flex;
-      gap: 5px;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    #buffering-indicator.active {
-      opacity: 1;
-      visibility: visible;
-    }
+      /* ── BACKGROUND GRID ── */
+      .bg-grid {
+        position: absolute;
+        inset: 0;
+        background-image: 
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        z-index: 0;
+        pointer-events: none;
+        transform: perspective(500px) rotateX(45deg) scale(2);
+        transform-origin: top center;
+        opacity: 0.6;
+      }
 
-    .dot {
-      width: 6px;
-      height: 6px;
-      background-color: var(--brand-blue);
-      border-radius: 50%;
-      animation: dotPulse 1.2s infinite ease-in-out both;
-    }
-    .dot:nth-child(1) { animation-delay: -0.32s; }
-    .dot:nth-child(2) { animation-delay: -0.16s; }
+      /* ── SCREENS ── */
+      .screen {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        background: radial-gradient(circle at center, #0f1712 0%, var(--bg-dark) 100%);
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+      }
+      .screen.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
 
-    .hidden { display: none !important; }
-  </style>
-</head>
-<body>
-
-  <!-- LOADER SCREEN -->
-  <div id="loader-screen" class="screen">
-    <div class="loader-content">
-      <h1 class="brand-title">STREAM<span>47</span></h1>
+      /* ── LOADER SCREEN ── */
+      #loader-screen { z-index: 50; }
       
-      <div class="loader-dots">
-        <span></span>
-        <span></span>
-        <span></span>
+      .radar-container {
+        position: relative;
+        width: 90px;
+        height: 90px;
+        margin-bottom: 24px;
+        border-radius: 50%;
+        background: radial-gradient(circle at center, rgba(65, 105, 225, 0.1) 0%, transparent 70%);
+        box-shadow: 0 0 40px rgba(65, 105, 225, 0.15);
+      }
+      .radar-svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+      .radar-sweep {
+        transform-origin: 50px 50px;
+        animation: spin 2s linear infinite;
+      }
+      @keyframes spin { 100% { transform: rotate(360deg); } }
+
+      .brand-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 56px;
+        letter-spacing: 4px;
+        line-height: 1;
+        text-shadow: 0 0 20px rgba(65, 105, 225, 0.3);
+      }
+      .brand-title span { color: var(--brand-blue); }
+      
+      .subtitle {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 6px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 8px;
+        text-transform: uppercase;
+      }
+
+      .divider {
+        width: 200px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        margin: 24px 0;
+      }
+
+      .dots-container {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .dot {
+        width: 6px;
+        height: 6px;
+        background-color: var(--brand-blue);
+        border-radius: 50%;
+        opacity: 0.3;
+        box-shadow: 0 0 10px var(--brand-blue-glow);
+        animation: pulseDot 1.4s infinite ease-in-out both;
+      }
+      .dot:nth-child(1) { animation-delay: -0.32s; }
+      .dot:nth-child(2) { animation-delay: -0.16s; }
+      @keyframes pulseDot {
+        0%, 80%, 100% { transform: scale(0.8); opacity: 0.3; }
+        40% { transform: scale(1.2); opacity: 1; }
+      }
+
+      .status-text {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 3px;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+      }
+
+      /* ── ERROR SCREEN ── */
+      #error-screen {
+        z-index: 60;
+        background: var(--bg-dark);
+      }
+      
+      .lightning-icon {
+        width: 48px;
+        height: 48px;
+        fill: #dca952;
+        margin-bottom: 24px;
+        filter: drop-shadow(0 0 15px rgba(220, 169, 82, 0.3));
+      }
+
+      .error-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 38px;
+        letter-spacing: 3px;
+        margin-bottom: 16px;
+      }
+
+      .error-desc {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 13px;
+        color: var(--text-dim);
+        text-align: center;
+        max-width: 320px;
+        line-height: 1.6;
+        margin-bottom: 32px;
+      }
+
+      .retry-btn {
+        background-color: var(--brand-blue);
+        color: #fff;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 4px;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 15px rgba(65, 105, 225, 0.2);
+      }
+      .retry-btn:hover {
+        transform: translateY(-2px);
+        background-color: #5c85ff;
+        box-shadow: 0 6px 20px rgba(65, 105, 225, 0.35);
+      }
+
+      /* ── PLAYER & WATERMARKS ── */
+      #player-wrap {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        background: #000;
+        z-index: 5;
+      }
+      video { width: 100%; height: 100%; display: block; }
+      .plyr { width: 100% !important; height: 100% !important; position: relative; font-weight: 600; }
+      .plyr--video, .plyr__video-wrapper { height: 100% !important; }
+      .plyr video { height: 100% !important; object-fit: contain; }
+      
+      /* Watermark Top Left (Join) */
+      #join-btn {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 102;
+        color: rgba(255,255,255,0.7);
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 3px 10px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 1px;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(4px);
+        transition: all 0.4s ease;
+        opacity: 0;
+        visibility: hidden;
+      }
+      #join-btn.visible { opacity: 1; visibility: visible; }
+      #join-btn:hover { color: #fff; border-color: #fff; background: rgba(0,0,0,0.7); }
+
+      /* Custom Overlay Fullscreen Button (Tuned and Sized Small) */
+      #custom-fs-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 103;
+        background: rgba(0, 0, 0, 0.65);
+        border: 1px solid rgba(65, 105, 225, 0.3);
+        color: #fff;
+        width: 30px;
+        height: 30px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.4s ease, transform 0.2s;
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        visibility: hidden;
+      }
+      #custom-fs-btn.visible { opacity: 1; visibility: visible; }
+      #custom-fs-btn:hover {
+        background: rgba(65, 105, 225, 0.2);
+        border-color: var(--brand-blue);
+        box-shadow: 0 0 8px var(--brand-blue-glow);
+        transform: scale(1.05);
+      }
+      #custom-fs-btn svg {
+        width: 14px;
+        height: 14px;
+        stroke: #fff;
+        transition: transform 0.2s;
+      }
+      #custom-fs-btn:active svg {
+        transform: scale(0.9);
+      }
+      /* Hide the overlay FS button when Plyr naturally hides its controls */
+      .plyr--hide-controls #custom-fs-btn {
+        opacity: 0 !important;
+        pointer-events: none;
+      }
+
+      /* Watermark Bottom Center */
+      #wm {
+        position: absolute;
+        bottom: 54px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 102;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.4s, visibility 0.4s;
+        width: max-content;
+        max-width: 90%;
+      }
+      #wm.visible {
+        visibility: visible;
+        opacity: 0.4;
+      }
+      .plyr--hide-controls #wm.visible { opacity: 0.2; }
+      .wm-rule { width: 30px; height: 1px; background: linear-gradient(90deg, transparent, var(--brand-blue)); flex-shrink: 0; }
+      .wm-rule.r { background: linear-gradient(90deg, var(--brand-blue), transparent); flex-shrink: 0; }
+      .wm-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; white-space: nowrap; }
+      .wm-name { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 4px; color: #fff; text-shadow: 0 2px 10px #000; }
+      .wm-name span { color: var(--brand-blue); }
+      .wm-url { font-size: 10px; font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,0.6); text-transform: uppercase; white-space: nowrap; }
+
+      /* In-Player Buffering Spinner */
+      #buffering-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 101;
+        display: flex;
+        gap: 6px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      #buffering-indicator.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      /* Hidden helper utility class */
+      .hidden { display: none !important; }
+    </style>
+  </head>
+  <body>
+
+    <!-- BACKGROUND GRID -->
+    <div class="bg-grid"></div>
+
+    <!-- LOADER SCREEN -->
+    <div id="loader-screen" class="screen">
+      <div class="radar-container">
+        <svg viewBox="0 0 100 100" class="radar-svg">
+          <circle cx="50" cy="50" r="48" stroke="rgba(65, 105, 225, 0.15)" stroke-width="1" fill="none" />
+          <circle cx="50" cy="50" r="28" stroke="rgba(65, 105, 225, 0.4)" stroke-width="1" fill="none" />
+          <circle cx="50" cy="50" r="8" stroke="rgba(65, 105, 225, 0.6)" stroke-width="2" fill="none" />
+          <g class="radar-sweep">
+            <circle cx="50" cy="22" r="3.5" fill="#fff" filter="drop-shadow(0 0 4px #4169E1)" />
+          </g>
+        </svg>
+      </div>
+      <h1 class="brand-title">SPORTS<span>TRACK</span></h1>
+      <h2 class="subtitle">LIVE MATCH CENTER</h2>
+      <div class="divider"></div>
+      <div class="dots-container">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <p class="status-text" id="status-text">CONNECTING TO STREAM...</p>
+    </div>
+
+    <!-- ERROR SCREEN -->
+    <div id="error-screen" class="screen hidden">
+      <svg class="lightning-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="#dca952" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <h1 class="error-title">STREAM UNAVAILABLE</h1>
+      <p class="error-desc" id="error-desc">Player did not load. Check if the stream URL is valid, CORS is allowed, and the .m3u8 is reachable.</p>
+      <button class="retry-btn" onclick="location.reload()">RETRY</button>
+    </div>
+
+    <!-- PLAYER WRAPPER -->
+    <div id="player-wrap">
+      <a id="join-btn" href="https://whatsapp.com/channel/0029VbBcvbn9WtC1onDirp09" target="_blank">JOIN US</a>
+      
+      <!-- In-Player Buffering Indicator -->
+      <div id="buffering-indicator">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
       </div>
 
-      <div class="subtitle">LIVE MATCH CENTER</div>
-      <div id="status-text" class="status-text">ESTABLISHING CONNECTION...</div>
-    </div>
-  </div>
-
-  <!-- ERROR SCREEN -->
-  <div id="error-screen" class="screen hidden">
-    <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="12" y1="8" x2="12" y2="12"></line>
-      <line x1="12" y1="16" x2="12.01" y2="16"></line>
-    </svg>
-    <div class="error-title">STREAM UNAVAILABLE</div>
-    <div id="error-desc" class="error-desc">Unable to load the requested video stream. Please check your internet connection or stream URL.</div>
-    <button class="retry-btn" onclick="retryStream()">RETRY CONNECTION</button>
-  </div>
-
-  <!-- PLAYER WRAPPER -->
-  <div id="player-wrap">
-    <a id="join-btn" href="https://whatsapp.com/channel/0029VbBcvbn9WtC1onDirp09" target="_blank">JOIN US</a>
-    
-    <!-- In-Player Buffering Indicator -->
-    <div id="buffering-indicator">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
+      <!-- CUSTOM FULLSCREEN BUTTON (Overlay top-right corner) -->
+      <button id="custom-fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
+        <!-- SVG Expand Icon -->
+        <svg class="fs-icon-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+        <!-- SVG Compress Icon -->
+        <svg class="fs-icon-exit hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"/>
+        </svg>
+      </button>
+      
+      <video id="player" controls playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true"></video>
     </div>
 
-    <!-- CUSTOM FULLSCREEN BUTTON -->
-    <button id="custom-fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
-      <svg id="fs-icon-enter" viewBox="0 0 24 24">
-        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-      </svg>
-      <svg id="fs-icon-exit" class="hidden" viewBox="0 0 24 24">
-        <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
-      </svg>
-    </button>
-
-    <video id="player" playsinline controls></video>
-  </div>
-
-  <!-- WATERMARK (Bottom Center) -->
-  <div id="wm">
-    <div class="wm-rule"></div>
-    <div class="wm-inner">
-      <div class="wm-name">STREAM<span>47</span></div>
-      <div class="wm-url">STREAM47.BLOGSPOT.COM</div>
+    <!-- WATERMARK -->
+    <div id="wm">
+      <div class="wm-rule"></div>
+      <div class="wm-inner">
+        <div class="wm-name">SPORTS<span>TRACK</span></div>
+        <div class="wm-url">sportstrack.me</div>
+      </div>
+      <div class="wm-rule r"></div>
     </div>
-    <div class="wm-rule r"></div>
-  </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      let hls = null;
-      let plyr = null;
-      let hardTimeout = null;
-      let retryCount = 0;
-      let wmTimer = null;
-      const MAX_RETRIES = 3;
+    <script>
+      (function(){
+        // INITIALIZE VARIABLES AT THE TOP TO PREVENT REFERENCE ERRORS
+        let hls = null;
+        let plyr = null;
+        let hardTimeout = null;
+        let retryCount = 0;
+        let wmTimer = null;
+        const MAX_RETRIES = 3;
 
-      const params = new URLSearchParams(window.location.search);
-      const DIRECT_SRC = params.get('url') || params.get('stream') || params.get('get') || params.get('src') || '';
+        const params = new URLSearchParams(window.location.search);
+        const DIRECT_SRC = params.get('url') || params.get('stream') || params.get('get') || params.get('src') || '';
 
-      const video = document.getElementById('player');
-      const playerWrap = document.getElementById('player-wrap');
-      const loaderScreen = document.getElementById('loader-screen');
-      const errorScreen = document.getElementById('error-screen');
-      const statusText = document.getElementById('status-text');
-      const wm = document.getElementById('wm');
-      const joinBtn = document.getElementById('join-btn');
-      const customFsBtn = document.getElementById('custom-fs-btn');
-      const bufferingIndicator = document.getElementById('buffering-indicator');
+        const video = document.getElementById('player');
+        const loaderScreen = document.getElementById('loader-screen');
+        const errorScreen = document.getElementById('error-screen');
+        const statusText = document.getElementById('status-text');
+        const wm = document.getElementById('wm');
+        const joinBtn = document.getElementById('join-btn');
+        const customFsBtn = document.getElementById('custom-fs-btn');
+        const bufferingIndicator = document.getElementById('buffering-indicator');
 
-      // Comprehensive Cross-Origin Iframe Fullscreen Strategy
-      window.toggleFullscreen = function() {
-        const isFsActive = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        // Robust Fullscreen Switch
+        window.toggleFullscreen = function() {
+          const wrapper = document.getElementById('player-wrap');
+          const isFS = document.fullscreenElement || 
+                       document.webkitFullscreenElement || 
+                       document.mozFullScreenElement || 
+                       document.msFullscreenElement;
 
-        if (isFsActive) {
-          // Exit fullscreen
-          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-          else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-          else if (document.msExitFullscreen) document.msExitFullscreen();
-          else if (video.webkitExitFullscreen) video.webkitExitFullscreen();
-          if (plyr && plyr.fullscreen && plyr.fullscreen.active) plyr.fullscreen.exit();
-        } else {
-          // Enter fullscreen (Try all potential API hooks for cross-domain iframes)
-          let fsTriggered = false;
-
-          // 1. Plyr internal API
-          if (plyr && plyr.fullscreen && typeof plyr.fullscreen.enter === 'function') {
-            try {
-              plyr.fullscreen.enter();
-              fsTriggered = true;
-            } catch(e) {}
-          }
-
-          // 2. Standard HTML5 Request Fullscreen on Player Wrapper
-          if (!fsTriggered) {
-            const targetEl = playerWrap || document.documentElement;
-            const reqFs = targetEl.requestFullscreen || targetEl.webkitRequestFullscreen || targetEl.mozRequestFullScreen || targetEl.msRequestFullscreen;
-            if (reqFs) {
-              try {
-                reqFs.call(targetEl).catch(() => {
-                  // Fallback to video native iOS/Safari fullscreen if container fails
-                  if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-                });
-                fsTriggered = true;
-              } catch(e) {}
+          if (!isFS) {
+            // Request Fullscreen on video wrapper
+            if (wrapper.requestFullscreen) {
+              wrapper.requestFullscreen();
+            } else if (wrapper.webkitRequestFullscreen) {
+              wrapper.webkitRequestFullscreen();
+            } else if (wrapper.mozRequestFullScreen) {
+              wrapper.mozRequestFullScreen();
+            } else if (wrapper.msRequestFullscreen) {
+              wrapper.msRequestFullscreen();
+            } else if (video.webkitEnterFullscreen) {
+              // iOS native video fallback
+              video.webkitEnterFullscreen();
+            }
+          } else {
+            // Exit Fullscreen
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+              document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+              document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+              document.msExitFullscreen();
             }
           }
+        };
 
-          // 3. Fallback to native video webkitEnterFullscreen (iOS / Safari)
-          if (!fsTriggered && video.webkitEnterFullscreen) {
-            try { video.webkitEnterFullscreen(); fsTriggered = true; } catch(e) {}
+        // Keep button icons updated on change
+        function updateFullscreenIcons() {
+          const enterIcon = customFsBtn.querySelector('.fs-icon-enter');
+          const exitIcon = customFsBtn.querySelector('.fs-icon-exit');
+          const isFS = document.fullscreenElement || 
+                       document.webkitFullscreenElement || 
+                       document.mozFullScreenElement || 
+                       document.msFullscreenElement;
+
+          if (isFS) {
+            enterIcon.classList.add('hidden');
+            exitIcon.classList.remove('hidden');
+          } else {
+            enterIcon.classList.remove('hidden');
+            exitIcon.classList.add('hidden');
           }
-
-          // 4. Send postMessage to parent frame if embedded in strict iframe container
-          if (window.parent && window.parent !== window) {
-            window.parent.postMessage({ type: 'REQUEST_FULLSCREEN' }, '*');
-          }
         }
-      };
 
-      function updateFsIcons(isFullscreen) {
-        const enterIcon = document.getElementById('fs-icon-enter');
-        const exitIcon = document.getElementById('fs-icon-exit');
-        if (isFullscreen) {
-          enterIcon.classList.add('hidden');
-          exitIcon.classList.remove('hidden');
-        } else {
-          enterIcon.classList.remove('hidden');
-          exitIcon.classList.add('hidden');
+        document.addEventListener('fullscreenchange', updateFullscreenIcons);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
+        document.addEventListener('mozfullscreenchange', updateFullscreenIcons);
+        document.addEventListener('MSFullscreenChange', updateFullscreenIcons);
+
+        // UI Management
+        function showLoader(msg) {
+          errorScreen.classList.add('hidden');
+          loaderScreen.classList.remove('hidden');
+          if(msg) statusText.textContent = msg;
         }
-      }
 
-      // Mobile Landscape Orientation Auto-Lock
-      function lockLandscape(){
-        try {
-          const scr = screen.orientation || screen.msOrientation;
-          if (scr && scr.lock) scr.lock('landscape').catch(() => {});
-        } catch(e) {}
-      }
-
-      function unlockOrientation(){
-        try {
-          const scr = screen.orientation || screen.msOrientation;
-          if (scr && scr.unlock) scr.unlock();
-        } catch(e) {}
-      }
-
-      const fsEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
-      fsEvents.forEach(evt => {
-        document.addEventListener(evt, () => {
-          const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-          updateFsIcons(isFs);
-          if (isFs) lockLandscape(); else unlockOrientation(); 
-        });
-      });
-
-      video.addEventListener('webkitbeginfullscreen', () => { updateFsIcons(true); lockLandscape(); });
-      video.addEventListener('webkitendfullscreen', () => { updateFsIcons(false); unlockOrientation(); });
-
-      function triggerError(msg) {
-        clearTimeout(hardTimeout);
-        loaderScreen.classList.add('hidden');
-        errorScreen.classList.remove('hidden');
-        bufferingIndicator.classList.remove('active');
-        if (msg) document.getElementById('error-desc').textContent = msg;
-        if (hls) { hls.destroy(); hls = null; }
-        if (plyr) { plyr.destroy(); plyr = null; }
-      }
-
-      function mountWm(){
-        const p = document.querySelector('.plyr');
-        if (p && !p.contains(wm)) { 
-          p.style.position = 'relative'; 
-          p.appendChild(wm); 
+        // Error triggers and dismantles components cleanly
+        function triggerError(msg) {
+          clearTimeout(hardTimeout);
+          loaderScreen.classList.add('hidden');
+          errorScreen.classList.remove('hidden');
+          bufferingIndicator.classList.remove('active');
+          if (msg) document.getElementById('error-desc').textContent = msg;
+          if (hls) { hls.destroy(); hls = null; }
+          if (plyr) { plyr.destroy(); plyr = null; }
         }
-      }
 
-      function onVideoReadyToPlay() {
-        clearTimeout(hardTimeout);
-        loaderScreen.classList.add('hidden');
-        errorScreen.classList.add('hidden');
-        bufferingIndicator.classList.remove('active');
-        mountWm();
-        
-        wm.classList.add('visible');
-        joinBtn.classList.add('visible');
-        customFsBtn.classList.add('visible');
-      }
-
-      if (!DIRECT_SRC) {
-        triggerError('No stream URL provided. Add ?url=<m3u8-link> to the page URL.');
-        return;
-      }
-
-      video.addEventListener('waiting', () => {
-        if (loaderScreen.classList.contains('hidden')) {
-          bufferingIndicator.classList.add('active');
+        function mountWm(){
+          const p = document.querySelector('.plyr');
+          if (p && !p.contains(wm)) { p.style.position = 'relative'; p.appendChild(wm); }
         }
-      });
 
-      video.addEventListener('playing', onVideoReadyToPlay);
-      video.addEventListener('canplay', onVideoReadyToPlay);
-      video.addEventListener('loadedmetadata', onVideoReadyToPlay);
+        // Hides Loader Screen and configures Watermark alignment
+        function onVideoReadyToPlay() {
+          clearTimeout(hardTimeout);
+          loaderScreen.classList.add('hidden');
+          errorScreen.classList.add('hidden');
+          bufferingIndicator.classList.remove('active');
+          mountWm();
+          
+          // Reveal overlays ONLY when video is actually playing/ready
+          wm.classList.add('visible');
+          joinBtn.classList.add('visible');
+          customFsBtn.classList.add('visible');
+        }
 
-      // Core Player & Quality Configuration
-      function initPlayer(sourceUrl) {
-        loaderScreen.classList.remove('hidden');
-        errorScreen.classList.add('hidden');
-        statusText.textContent = "ESTABLISHING CONNECTION...";
+        if (!DIRECT_SRC) {
+          triggerError('No stream URL provided. Add ?url=<m3u8-link> to the page URL.');
+          return;
+        }
 
-        clearTimeout(hardTimeout);
+        // Hard timeout: If video doesn't load/buffer enough to play within 15s, show fallback screen
         hardTimeout = setTimeout(() => {
-          if (!video.currentTime && loaderScreen.classList.contains('hidden') === false) {
-            triggerError("Connection timed out. Stream took too long to respond.");
+          triggerError('Connection timed out. Check if the stream URL is valid, CORS is allowed, and the .m3u8 is reachable.');
+        }, 15000);
+
+        // Auto-landscape handling
+        function lockLandscape(){
+          try {
+            const scr = screen.orientation || screen.msOrientation;
+            if (scr && scr.lock) scr.lock('landscape').catch(()=>{});
+          } catch(e) {}
+        }
+        function unlockOrientation(){
+          try {
+            const scr = screen.orientation || screen.msOrientation;
+            if (scr && scr.unlock) scr.unlock();
+          } catch(e) {}
+        }
+        document.addEventListener('fullscreenchange', () => { if (document.fullscreenElement) lockLandscape(); else unlockOrientation(); });
+        video.addEventListener('webkitbeginfullscreen', lockLandscape);
+        video.addEventListener('webkitendfullscreen', unlockOrientation);
+
+        // Handle Player Buffering State for embedded views
+        video.addEventListener('waiting', () => {
+          if (loaderScreen.classList.contains('hidden')) {
+            bufferingIndicator.classList.add('active');
           }
-        }, 18000);
+        });
 
-        if (Hls.isSupported()) {
-          if (hls) hls.destroy();
+        // Hide Loader as soon as video plays OR is ready to be played (handling autoplay block)
+        video.addEventListener('playing', onVideoReadyToPlay);
+        video.addEventListener('canplay', onVideoReadyToPlay);
+        video.addEventListener('loadedmetadata', onVideoReadyToPlay);
 
+        // Core Player Setup
+        function initPlayer(srcUrl) {
+          // Native HLS (iOS Safari)
+          if (!Hls.isSupported() && video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = srcUrl;
+            // Native UI: exclude Plyr's default fullscreen so it doesn't collide with our custom button
+            plyr = new Plyr(video, { controls: ['play-large','play','progress','current-time','mute','volume'] });
+            
+            video.play().catch(()=>{});
+            video.addEventListener('error', () => triggerError('Native playback failed. The stream might be offline or unsupported.'));
+            return;
+          }
+
+          if (!Hls.isSupported()) {
+            triggerError('Your browser does not support HLS playback.');
+            return;
+          }
+
+          // HLS.js implementation
           hls = new Hls({
+            maxBufferLength: 30,
+            maxMaxBufferLength: 60,
+            liveSyncDuration: 8,
+            liveMaxLatencyDuration: 15,
             enableWorker: true,
-            lowLatencyMode: true,
-            backBufferLength: 90
+            lowLatencyMode: false,
           });
 
-          hls.loadSource(sourceUrl);
+          hls.loadSource(srcUrl);
           hls.attachMedia(video);
 
           hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
-            // Extract available qualities for gear menu
-            const availableQualities = hls.levels.map((l) => l.height).filter(Boolean);
-            availableQualities.unshift(0); // 0 = Auto
+            const qualities = data.levels.map(l => l.height).filter(h => h > 0).sort((a,b)=>b-a);
+            const uniqueQualities = [...new Set(qualities)];
 
-            setupPlyr(availableQualities);
-            video.play().catch(() => {});
+            // Exclude Plyr's native fullscreen option since we utilize a custom hardware overlay button
+            plyr = new Plyr(video, {
+              controls: ['play-large','play','progress','current-time','mute','volume', uniqueQualities.length > 1 ? 'settings' : ''].filter(Boolean),
+              settings: ['quality'],
+              quality: {
+                default: uniqueQualities[0] || 'default',
+                options: uniqueQualities,
+                forced: true,
+                onChange: q => {
+                  const bestIdx = hls.levels.findIndex(l => l.height === q);
+                  if (bestIdx !== -1) hls.currentLevel = bestIdx;
+                }
+              }
+            });
+
+            // Trigger safe non-interactive playback (Browser policy handles pause/play button display dynamically)
+            video.play().catch(()=>{});
           });
 
           hls.on(Hls.Events.ERROR, (event, data) => {
             if (data.fatal) {
               switch (data.type) {
                 case Hls.ErrorTypes.NETWORK_ERROR:
+                  console.warn("Network error encountered.");
                   if (retryCount < MAX_RETRIES) {
                     retryCount++;
-                    statusText.textContent = `RECONNECTING (${retryCount}/${MAX_RETRIES})...`;
+                    statusText.textContent = `RECONNECTING... (${retryCount}/${MAX_RETRIES})`;
+                    showLoader();
                     hls.startLoad();
                   } else {
-                    triggerError("Network error: Unable to fetch live stream segments.");
+                    triggerError('Network Error: Maximum retries reached. The stream is currently offline or unreachable due to CORS.');
                   }
                   break;
                 case Hls.ErrorTypes.MEDIA_ERROR:
-                  hls.recoverMediaError();
+                  console.warn("Media error encountered, trying to recover.");
+                  if (retryCount < MAX_RETRIES) {
+                    retryCount++;
+                    hls.recoverMediaError();
+                  } else {
+                    triggerError('Media Error: Stream decoding failed repeatedly.');
+                  }
                   break;
                 default:
-                  triggerError("Fatal playback error occurred.");
+                  triggerError('Stream Error: An unrecoverable error occurred while attempting to parse the manifest.');
                   break;
               }
             }
           });
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = sourceUrl;
-          setupPlyr([]);
-          video.play().catch(() => {});
-        } else {
-          triggerError("Your browser does not support HLS stream playback.");
         }
-      }
 
-      function setupPlyr(qualities = []) {
-        if (plyr) return;
-
-        const defaultOptions = {
-          controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
-          settings: ['quality', 'speed'],
-          quality: {
-            default: 0,
-            options: qualities.length ? qualities : [0],
-            forced: true,
-            onChange: (newQuality) => {
-              if (!hls) return;
-              if (newQuality === 0) {
-                hls.currentLevel = -1; // Auto level selection
-              } else {
-                hls.levels.forEach((level, levelIndex) => {
-                  if (level.height === newQuality) {
-                    hls.currentLevel = levelIndex;
-                  }
-                });
-              }
-            }
-          },
-          i18n: {
-            qualityLabel: {
-              0: 'Auto'
-            }
-          },
-          keyboard: { focused: true, global: true },
-          tooltips: { controls: true, seek: true }
-        };
-
-        plyr = new Plyr(video, defaultOptions);
-
-        plyr.on('fullscreenchange', (event) => {
-          updateFsIcons(event.detail.plyr.fullscreen.active);
+        // Watermark fading logic
+        function resetWm() {
+          if (!wm.classList.contains('visible')) return;
+          wm.style.opacity = '0.4';
+          clearTimeout(wmTimer);
+          wmTimer = setTimeout(() => { if (!video.paused && wm.classList.contains('visible')) wm.style.opacity = '0.2'; }, 3000);
+        }
+        video.addEventListener('play', resetWm);
+        video.addEventListener('pause', () => {
+          if (wm.classList.contains('visible')) wm.style.opacity = '0.4';
         });
-      }
+        document.addEventListener('mousemove', resetWm);
+        document.addEventListener('touchstart', resetWm);
 
-      function resetWm() {
-        if (!wm.classList.contains('visible')) return;
-        wm.style.opacity = '0.4';
-        clearTimeout(wmTimer);
-        wmTimer = setTimeout(() => { 
-          if (!video.paused && wm.classList.contains('visible')) {
-            wm.style.opacity = '0.2'; 
-          }
-        }, 3000);
-      }
-
-      video.addEventListener('play', resetWm);
-      video.addEventListener('pause', () => {
-        if (wm.classList.contains('visible')) wm.style.opacity = '0.4';
-      });
-      document.addEventListener('mousemove', resetWm);
-      document.addEventListener('touchstart', resetWm);
-
-      window.retryStream = function() {
-        retryCount = 0;
+        // Start 
         initPlayer(DIRECT_SRC);
-      };
-
-      initPlayer(DIRECT_SRC);
-    });
-  </script>
-</body>
+      })();
+    </script>
+  </body>
 </html>
