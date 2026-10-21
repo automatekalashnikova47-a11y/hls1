@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    <!-- Google IMA SDK for VAST Ads -->
+    <script src="//imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
     <!-- Keyboard/Right-click Protection -->
@@ -292,6 +294,17 @@
 
       /* Hidden helper utility class */
       .hidden { display: none !important; }
+      
+      /* ── VAST AD CONTAINER ── */
+      #ad-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 20;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
@@ -299,7 +312,7 @@
     <!-- BACKGROUND GRID -->
     <div class="bg-grid"></div>
 
-    <!-- LOADER SCREEN (Redesigned to match image) -->
+    <!-- LOADER SCREEN -->
     <div id="loader-screen" class="screen">
       <h1 class="brand-title">SPORTS<span>TRACK</span></h1>
       <div class="dots-container">
@@ -324,6 +337,9 @@
     <!-- PLAYER WRAPPER -->
     <div id="player-wrap">
       <a id="join-btn" href="https://www.whatsapp.com/channel/0029Vb7Jqva5K3zLauUJSv2s" target="_blank">JOIN US</a>
+      
+      <!-- AD CONTAINER FOR VAST -->
+      <div id="ad-container"></div>
       
       <!-- CUSTOM FULLSCREEN BUTTON -->
       <button id="custom-fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
@@ -357,6 +373,7 @@
         let wmTimer = null;
         const MAX_RETRIES = 3;
 
+        // 1. Define DOM elements and parameters FIRST so they are available
         const params = new URLSearchParams(window.location.search);
         const DIRECT_SRC = params.get('url') || params.get('stream') || params.get('get') || params.get('src') || '';
 
@@ -366,6 +383,89 @@
         const statusText = document.getElementById('status-text');
         const wm = document.getElementById('wm');
         const customFsBtn = document.getElementById('custom-fs-btn');
+
+        // 2. IMA Ad variables
+        let adsLoader, adsManager, adDisplayContainer;
+        let adInitialized = false;
+        const VAST_TAG_URL = "https://youradexchange.com/video/select.php?r=12342954";
+
+        function initIMA() {
+          if (adInitialized) return;
+          adInitialized = true;
+
+          // Ad Display Container (video is now defined!)
+          adDisplayContainer = new google.ima.AdDisplayContainer(
+            document.getElementById('ad-container'),
+            video
+          );
+
+          adsLoader = new google.ima.AdsLoader(adDisplayContainer);
+
+          adsLoader.addEventListener(
+            google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
+            onAdsManagerLoaded,
+            false
+          );
+          adsLoader.addEventListener(
+            google.ima.AdsErrorEvent.Type.ADS_ERROR,
+            onAdError,
+            false
+          );
+
+          const triggerAdPlayback = () => {
+            adDisplayContainer.initialize();
+            requestAds();
+            video.removeEventListener('play', triggerAdPlayback);
+          };
+          
+          video.addEventListener('play', triggerAdPlayback);
+        }
+
+        function requestAds() {
+          const adsRequest = new google.ima.AdsRequest();
+          adsRequest.adTagUrl = VAST_TAG_URL;
+          adsRequest.linearAdSlotWidth = video.clientWidth;
+          adsRequest.linearAdSlotHeight = video.clientHeight;
+          adsRequest.nonLinearAdSlotWidth = video.clientWidth;
+          adsRequest.nonLinearAdSlotHeight = video.clientHeight;
+
+          try {
+            adsLoader.requestAds(adsRequest);
+          } catch (e) {
+            console.error("Error requesting ads:", e);
+          }
+        }
+
+        function onAdsManagerLoaded(ismaticEvent) {
+          const adsRenderingSettings = new google.ima.AdsRenderingSettings();
+          adsRenderingSettings.restoreCustomPlaybackState = true;
+          
+          adsManager = ismaticEvent.getAdsManager(video, adsRenderingSettings);
+
+          adsManager.addEventListener(google.ima.AdErrorEvent.Type.ADS_ERROR, onAdError);
+          adsManager.addEventListener(google.ima.AdsEventType.CONTENT_PAUSE_REQUESTED, () => {
+            video.pause();
+          });
+          adsManager.addEventListener(google.ima.AdsEventType.CONTENT_RESUME_REQUESTED, () => {
+            video.play().catch(()=>{});
+          });
+
+          try {
+            adsManager.init(video.clientWidth, video.clientHeight, google.ima.ViewMode.NORMAL);
+            adsManager.start();
+          } catch (adError) {
+            onAdError(adError);
+          }
+        }
+
+        function onAdError(adErrorEvent) {
+          console.warn('Ad error encountered, resuming stream content:', adErrorEvent.getError ? adErrorEvent.getError() : adErrorEvent);
+          if (adsManager) adsManager.destroy();
+          video.play().catch(()=>{});
+        }
+
+        // 3. Initialize IMA now that `video` exists
+        initIMA();
 
         // Robust Fullscreen Switch
         window.toggleFullscreen = function() {
@@ -425,7 +525,7 @@
         function showLoader(msg) {
           errorScreen.classList.add('hidden');
           loaderScreen.classList.remove('hidden');
-          wm.classList.remove('visible'); // Keep watermark hidden while loading
+          wm.classList.remove('visible');
           if(msg) statusText.textContent = msg;
         }
 
@@ -433,7 +533,7 @@
           clearTimeout(hardTimeout);
           loaderScreen.classList.add('hidden');
           errorScreen.classList.remove('hidden');
-          wm.classList.remove('visible'); // Hide watermark on error
+          wm.classList.remove('visible');
           if (msg) document.getElementById('error-desc').textContent = msg;
           if (hls) { hls.destroy(); hls = null; }
           if (plyr) { plyr.destroy(); plyr = null; }
@@ -449,7 +549,7 @@
           loaderScreen.classList.add('hidden');
           errorScreen.classList.add('hidden');
           mountWm();
-          wm.classList.add('visible'); // Show watermark ONLY after stream has loaded
+          wm.classList.add('visible');
         }
 
         if (!DIRECT_SRC) {
